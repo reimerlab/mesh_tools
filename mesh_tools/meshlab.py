@@ -1,13 +1,13 @@
-from pathlib import Path
-from io import StringIO
-import subprocess
-import trimesh
-import time
+
 import copy
-import os
-import random
-import trimesh_utils as tu
+from io import StringIO
 import numpy as np
+import os
+from pathlib import Path
+import random
+import subprocess
+import time
+import trimesh
 
 def set_meshlab_port(current_port=None):
     if current_port is None:
@@ -869,3 +869,9 @@ class Interior(FilterBase):
             script_filters=current_script_filters, 
             name="remove_interior",overwrite=overwrite, **kwargs)
 
+
+
+
+
+#--- from mesh_tools ---
+from . import trimesh_utils as tu

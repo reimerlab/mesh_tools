@@ -1,21 +1,30 @@
-"""
+'''
+
+
 These functions will help with skeletonization
 
-"""
-import numpy_utils as nu
-import trimesh_utils as tu
-from trimesh_utils import split_significant_pieces,split,combine_meshes,write_neuron_off
-import networkx_utils as xu
-import matplotlib_utils as mu
-import meshparty_skeletonize as m_sk
-import soma_extraction_utils as sm
-import ipyvolume_utils as ipvu
 
+'''
+import copy
+from copy import deepcopy
+import h5py
+import ipyvolume as ipv
+import itertools
+import matplotlib.pyplot as plt
+import meshparty
+import networkx as nx
 import numpy as np
+import os
+import pathlib
+from pathlib import Path
+from pykdtree.kdtree import KDTree
+import random
+import scipy
+from scipy.spatial.distance import pdist,squareform
+from shutil import rmtree
+import time
 import trimesh
 
-from tqdm_utils import tqdm
-import general_utils as gu
 
 
 max_stitch_distance_default = 10000
@@ -29,7 +38,7 @@ def compare_endpoints(endpioints_1,endpoints_2,**kwargs):
     comparing the endpoints of a graph: 
     
     Ex: 
-    import networkx_utils as xu
+    from python_tools import networkx_utils as xu
     xu = reload(xu)mess
     end_1 = np.array([[2,3,4],[1,4,5]])
     end_2 = np.array([[1,4,5],[2,3,4]])
@@ -212,8 +221,6 @@ def calculate_skeleton_distance(my_skeleton):
 calculate_skeletal_distance = calculate_skeleton_distance
 calculate_skeletal_length = calculate_skeleton_distance
 
-import ipyvolume as ipv
-from copy import deepcopy
 def plot_ipv_mesh(mesh,color=[1.,0.,0.,0.2],
                  flip_y=True):
     
@@ -597,18 +604,12 @@ def graph_skeleton_and_mesh(main_mesh_verts=[],
 
 
 """ ------------------- Mesh subtraction ------------------------------------"""
-import numpy as np
 #make sure pip3 install trimesh --upgrade so can have slice
-import trimesh 
-import matplotlib.pyplot as plt
-import ipyvolume as ipv
 
 try:
     import calcification_Module as cm
 except:
     pass
-from pathlib import Path
-import time
 
 
 #  Utility functions
@@ -896,7 +897,7 @@ def mesh_subtraction_by_skeleton_old(main_mesh,edges,
             else:
                 raise Exception("No contianing indices")
         except:
-            import system_utils as su
+            from python_tools import system_utils as su
             su.compressed_pickle(main_mesh_sub,"main_mesh_sub")
             su.compressed_pickle(ex_edge,"ex_edge")
             su.compressed_pickle(sub_components_face_indexes,"sub_components_face_indexes")
@@ -943,11 +944,6 @@ def mesh_subtraction_by_skeleton_old(main_mesh,edges,
 
 """ ----------Start of Surface Skeeltonization -- """
 
-import networkx as nx
-import time 
-import numpy as np
-import trimesh
-import random
 
 
 # # Older version that was not working properly
@@ -1080,10 +1076,8 @@ def generate_surface_skeleton_slower(vertices,
 
     return final_skeleton
 
-import meshparty
 
 #from meshparty_skeletonize import *
-import meshparty_skeletonize as m_sk
 def setup_root(mesh, is_soma_pt=None, soma_d=None, is_valid=None):
     """ function to find the root index to use for this mesh
     
@@ -1142,7 +1136,7 @@ def surface_skeleton(mesh,
                               mesh.faces, 
                                      **kwargs)
     if plot:
-        nviz.plot_objects(
+        ipvu.plot_objects(
             mesh,
             return_sk,
             buffer = 0,
@@ -1215,11 +1209,8 @@ def downsample_skeleton(current_skeleton):
 
 
 # ----- Stitching Algorithm ----- #
-import networkx as nx
 
-from pykdtree.kdtree import KDTree
 
-import scipy
 def stitch_skeleton(
                                           staring_edges,
                                           max_stitch_distance=max_stitch_distance_default,
@@ -1440,7 +1431,6 @@ try:
     from calcification_param_Module import calcification_param
 except:
     pass
-import trimesh
 def calcification(
                     location_with_filename,
                     max_triangle_angle =1.91986,
@@ -1580,7 +1570,7 @@ def skeleton_cgal(
         
     if plot:
         significant_poisson_skeleton = read_skeleton_edges_coordinates([sk_file])
-        nviz.plot_objects(
+        ipvu.plot_objects(
             mesh,
             significant_poisson_skeleton,
             buffer = 0,
@@ -1615,7 +1605,7 @@ def skeleton_cgal_original_parameters(
     )
     
     if plot:
-        nviz.plot_objects(
+        ipvu.plot_objects(
             mesh,
             return_sk,
             buffer=0
@@ -1628,9 +1618,6 @@ def skeleton_cgal_original_parameters(
 
 
 
-import mesh_utils as meshu
-import trimesh_utils as tu
-import neuron_visualizations as nviz
 def example_cgal_skeletonization_original_params(
     filename = "./elephant.off",
     plot = True,
@@ -1920,7 +1907,7 @@ def clean_skeleton(
     
     More complicated example:
     
-    import skeleton_utils as sk
+    from mesh_tools import skeleton_utils as sk
     from importlib import reload
     sk = reload(sk)
 
@@ -2144,7 +2131,7 @@ def filter_away_small_skeleton_offshoots(
     )
     
     if plot:
-        nviz.plot_objects(
+        ipvu.plot_objects(
             skeletons=[
                 skeleton
             ],
@@ -2181,7 +2168,7 @@ def clean_skeleton_with_soma_verts(G,
     
     More complicated example:
     
-    import skeleton_utils as sk
+    from mesh_tools import skeleton_utils as sk
     from importlib import reload
     sk = reload(sk)
 
@@ -2436,8 +2423,6 @@ def clean_skeleton_with_soma_verts(G,
     else:
         return G
     
-import copy
-import time
 def combine_close_branch_points(skeleton=None,
                                 combine_threshold = 700,
                                print_flag=False,
@@ -2467,7 +2452,7 @@ def combine_close_branch_points(skeleton=None,
     
     Ex: 
     sk = reload(sk)
-    import numpy_utils as nu
+    from python_tools import numpy_utils as nu
     nu = reload(nu)
     branch_skeleton_data_cleaned = []
     for i,curr_sk in enumerate(branch_skeleton_data):
@@ -2758,7 +2743,7 @@ def old_combine_close_branch_points(skeleton,
     
     Ex: 
     sk = reload(sk)
-    import numpy_utils as nu
+    from python_tools import numpy_utils as nu
     nu = reload(nu)
     branch_skeleton_data_cleaned = []
     for i,curr_sk in enumerate(branch_skeleton_data):
@@ -2903,66 +2888,15 @@ def old_combine_close_branch_points(skeleton,
     
     
 # ---------------------- Full Skeletonization Function --------------------- #
-from pykdtree.kdtree import KDTree
-import time
-import trimesh
-import numpy as np
-from pathlib import Path
 
-import time
-import os
-import pathlib
 
 
 try:
-    import meshlab
+    from mesh_tools import meshlab
 except:
     pass
 
-from shutil import rmtree
-from pathlib import Path
 
-import soma_extraction_utils as soma_utils
-from pathlib import Path
-import trimesh
-
-def load_somas(segment_id,main_mesh_total,
-              soma_path):
-    soma_path = str(soma_path)
-    try:
-        current_soma = trimesh.load_mesh(str(soma_path))
-        return [current_soma]
-    except:
-        print("No Soma currently available so must compute own")
-        (total_soma_list, 
-             run_time, 
-             total_soma_list_sdf) = soma_utils.extract_soma_center(
-                                segment_id,
-                                main_mesh_total.vertices,
-                                main_mesh_total.faces,
-                                outer_decimation_ratio= 0.25,
-                                large_mesh_threshold = 60000,
-                                large_mesh_threshold_inner = 40000,
-                                soma_width_threshold = 0.32,
-                                soma_size_threshold = 20000,
-                               inner_decimation_ratio = 0.25,
-                               volume_mulitplier=7,
-                               side_length_ratio_threshold=3,
-                                soma_size_threshold_max=192000,
-                                delete_files=True
-            )
-        
-        # save the soma
-        print(f"Found {len(total_soma_list)} somas")
-        soma_mesh = combine_meshes(total_soma_list)
-        soma_mesh.export(soma_path)
-        
-        return total_soma_list
-    else:
-        return []
-
-import meshparty_skeletonize as m_sk
-import time
 def skeletonize_connected_branch_meshparty(mesh,
                                            segment_size = 100,
                                            invalidation_d = 1200,
@@ -2988,7 +2922,7 @@ def skeletonize_connected_branch_meshparty(mesh,
                                                                               filter_end_node_length=3000,
                                                                              )
 
-    nviz.plot_objects(axon_mesh,meshparty_sk)
+    ipvu.plot_objects(axon_mesh,meshparty_sk)
     
     
     """
@@ -3021,7 +2955,7 @@ def skeletonize_connected_branch_meshparty(mesh,
         
     if plot:
         print(f"Plotting the skeleton")
-        nviz.plot_objects(mesh,
+        ipvu.plot_objects(mesh,
                          new_skeleton)
 
     if only_skeleton:
@@ -3454,423 +3388,8 @@ def soma_skeleton_stitching(total_soma_skeletons,soma_mesh):
 
 
 
-# ---- Util functions to be used for the skeletonization of soma containing meshes ------ #
-def recursive_soma_skeletonization(main_mesh,
-                                  soma_mesh_list,
-                                soma_mesh_list_indexes,
-                                   mesh_base_path="./temp_folder",
-                                  soma_mesh_list_centers=[],
-                                   current_name="segID"
-                                  ):
-    """
-    Parameters:
-    Mesh piece 
-    The soma centers list and meshes list contained somewhere within the mesh piece
-    
-        Algorithm
-    1) Start with the first soma and subtract from mesh
-    2) Find all of the disconnected mesh pieces
-    3) If there is still a soma piece that has not been processed, 
-    find mesh pieces and all the somas that are contained within that
-    4) Send Each one of those mesh pieces and soma lists
-    to the recursive_soma_skeletonization (these will return skeletons)
-    5) For all other pieces that do not have a soma do skeleton of branch
-    6) Do soma skeleton stitching using all the branches and those returning
-    from step 4
-    7) return skeleton
-
-    """
-    print("\n\n Inside New skeletonization recursive calls\n\n")
-    
-    if len(soma_mesh_list) == 0:
-        raise Exception("soma_mesh_list was empty")
-    else:
-        soma_mesh_list = list(soma_mesh_list)
-    
-    #0) If don't have the soma_mesh centers then calculate
-    if len(soma_mesh_list_centers) != len(soma_mesh_list):
-        soma_mesh_list_centers = sm.find_soma_centroids(soma_mesh_list)
-    
-    #1) Start with the first soma and subtract from mesh
-    #2) Find all of the disconnected mesh pieces
-    current_soma = soma_mesh_list.pop(0)
-    current_soma_index = soma_mesh_list_indexes.pop(0)
-    current_soma_center = soma_mesh_list_centers.pop(0)
-    mesh_pieces = sm.subtract_soma(current_soma,main_mesh)
-    print(f"currently working on soma index {current_soma_index}")
-    
-    print(f"mesh_pieces after the soma subtraction = {len(mesh_pieces)}")
-    
-    if len(mesh_pieces) < 1:
-        #just return an empty list
-        print("No significant pieces after soma cancellation so just using the soma center as the skeleton")
-        return np.vstack([current_soma_center,current_soma_center]).reshape(-1,2,3)
-        
-    
-    #3) If there is still a soma piece that has not been processed, 
-    total_soma_skeletons = []
-    
-    if len(soma_mesh_list) > 0:
-        #find mesh pieces and all the somas that are contained within that
-        containing_mesh_indices = sm.find_soma_centroid_containing_meshes(
-                                            soma_mesh_list_centers,
-                                            mesh_pieces
-        )
-        
-        # rearrange into lists of somas per mesh soma 
-        meshes_mapped_to_somas = sm.grouping_containing_mesh_indices(containing_mesh_indices)
-        
-        #get all of the other mesh pieces that weren't a part of the soma containing
-        mesh_pieces_with_soma = list(meshes_mapped_to_somas.keys())
-        non_soma_branches = [k for i,k in enumerate(mesh_pieces) if i not in mesh_pieces_with_soma]
-
-        print(f"meshes_mapped_to_somas = {meshes_mapped_to_somas}")
-        
-        #recursive call to the function to find all those skeletons for the 
-        #mesh groupings 
-        for mesh_idx,soma_list in meshes_mapped_to_somas.items():
-            mesh_soma_list = [k for i,k in enumerate(soma_mesh_list) if i in soma_list]
-            mesh_soma_list_indexes = [k for i,k in enumerate(soma_mesh_list_indexes) if i in soma_list]
-            mesh_soma_list_centers = [k for i,k in enumerate(soma_mesh_list_centers) if i in soma_list]
-            
-            print(f"mesh_soma_list = {mesh_soma_list}\n"
-                f"mesh_soma_list_indexes = {mesh_soma_list_indexes}\n"
-                 f"mesh_soma_list_centers = {mesh_soma_list_centers}\n")
-            
-            soma_mesh_skeleton = recursive_soma_skeletonization(
-                                  mesh_pieces[mesh_idx],
-                                  soma_mesh_list=mesh_soma_list,
-                                    soma_mesh_list_indexes = mesh_soma_list_indexes,
-                                  soma_mesh_list_centers=mesh_soma_list_centers,
-                                mesh_base_path=mesh_base_path,
-                                current_name=current_name
-            )
-            
-            total_soma_skeletons.append(soma_mesh_skeleton)
-        
-        
-        
-    
-    else:
-        non_soma_branches = mesh_pieces
-    
-    
-    print(f"non_soma_branches = {len(non_soma_branches)}")
-    print(f"mesh_pieces = {len(mesh_pieces)}")
-
-    
-    #5) For all other pieces that do not have a soma do skeleton of branch
-    for dendrite_index,picked_dendrite in enumerate(non_soma_branches):
-        dendrite_name=current_name + f"_soma_{current_soma_index}_branch_{dendrite_index}"
-        
-        print(f"\n\nWorking on {dendrite_name}")
-        stitched_dendrite_skeleton = skeletonize_connected_branch(picked_dendrite,
-                                                       output_folder=mesh_base_path,
-                                                       name=dendrite_name,
-                                                        skeleton_print = True)
-        
-        if len(stitched_dendrite_skeleton)<=0:
-                print(f"*** Dendrite {dendrite_index} did not have skeleton computed***")
-        else: 
-            total_soma_skeletons.append(stitched_dendrite_skeleton)
-    
-    #stitching together the soma parts:
-    soma_stitched_skeleton = soma_skeleton_stitching(total_soma_skeletons,current_soma)
-    
-    #return the stitched skeleton
-    return soma_stitched_skeleton
-    
-
-
-
-
-    
-def skeletonize_neuron(main_mesh_total,
-                        segment_id = 12345,
-                        soma_mesh_list = [],
-                       mesh_base_path="",
-                       current_name="",
-                       filter_end_node_length=5000,
-                       sig_th_initial_split=15,
-
-                        ):
-    """
-    Purpose: to skeletonize a neuron
-    
-    Example of How to Use:
-    
-    neuron_file = '/notebooks/test_neurons/91216997676870145_excitatory_1.off'
-    current_mesh = trimesh.load_mesh(neuron_file)
-    segment_id = 91216997676870145
-    html_path = neuron_file[:-4] + "_skeleton.html"
-    current_mesh
-    
-    new_cleaned_skeleton = skeletonize_neuron(main_mesh_total=current_mesh,
-                            segment_id = segment_id,
-                           mesh_base_path="",
-                           current_name="",
-
-                            )
-
-    new_cleaned_skeleton.shape
-    
-    """
-    global_time = time.time()
-    
-    #if no soma is provided then do own soma finding
-    if len(soma_mesh_list) == 0:
-        print("\nComputing Soma because none given")
-        (soma_mesh_list, 
-             run_time, 
-             total_soma_list_sdf) = soma_utils.extract_soma_center(
-                                segment_id,
-                                main_mesh_total.vertices,
-                                main_mesh_total.faces,
-                                outer_decimation_ratio= 0.25,
-                                large_mesh_threshold = 60000,
-                                large_mesh_threshold_inner = 40000,
-                                soma_width_threshold = 0.32,
-                                soma_size_threshold = 20000,
-                               inner_decimation_ratio = 0.25,
-                               volume_mulitplier=7,
-                               side_length_ratio_threshold=3,
-                                soma_size_threshold_max=192000,
-                                delete_files=True
-            )
-    else:
-        print(f"Not computing soma because list already given: {soma_mesh_list}")
-        
-        
-    
-    if len(soma_mesh_list) <= 0:
-        print(f"**** No Somas Found for Mesh {segment_id} so just one mesh")
-        soma_mesh_list_centers = []
-    else:
-        #compute the soma centers
-        print(f"Soma List = {soma_mesh_list}")
-        
-        soma_mesh_list_centers = sm.find_soma_centroids(soma_mesh_list)
-        print(f"soma_mesh_list_centers = {soma_mesh_list_centers}")
-
-    
-    split_meshes = split_significant_pieces(
-                            main_mesh_total,
-                            significance_threshold=sig_th_initial_split,
-                            print_flag=False)
-    
-    
-    """
-    Pseudocode: 
-    For all meshes in list
-    1) compute soma center
-    2) Find all the bounding boxes that contain the soma center
-    3) Find the mesh with the closest distance from 
-       one vertex to the soma center and tht is winner
-    """
-    
-    
-    #returns the index of the split_meshes index that contains each soma    
-    containing_mesh_indices = sm.find_soma_centroid_containing_meshes(soma_mesh_list_centers,
-                                            split_meshes)
-    
-    non_soma_touching_meshes = [m for i,m in enumerate(split_meshes)
-                     if i not in list(containing_mesh_indices.values())]
-    
-    
-    #Adding the step that will filter away any pieces that are inside the soma
-    if len(non_soma_touching_meshes) > 0 and len(soma_mesh_list) > 0:
-        non_soma_touching_meshes = soma_utils.filter_away_inside_soma_pieces(soma_mesh_list,non_soma_touching_meshes,
-                                        significance_threshold=sig_th_initial_split)
-        
-    
-    print(f"# of non soma touching seperate meshes = {len(non_soma_touching_meshes)}")
-    print(f"# of soma containing seperate meshes = {len(np.unique(list(containing_mesh_indices.values())))}")
-    
-    print(f"contents of soma containing seperate meshes = {np.unique(list(containing_mesh_indices.values()))}")
-    
-    
-    # setting the base path and the current name
-    if mesh_base_path == "":
-        mesh_base_path = Path(f"./{segment_id}")
-    else:
-        mesh_base_path = Path(mesh_base_path)
-        
-    if current_name == "":
-        current_name = f"{segment_id}"
-        
-    if mesh_base_path.exists():
-        rmtree(str(mesh_base_path.absolute()))
-    mesh_base_path.mkdir(parents=True,exist_ok=True)
-    print(list(mesh_base_path.iterdir()))
-    
-    """
-    Pseudocode for better skeletonization of the multi-soma cases:
-    Have containing_mesh_indices that has the indices of the mesh that contain each soma
-    
-    Recursive function: 
-    0) divide into soma indices that correspond to the same mesh indices
-    For each group that corresponds to same mesh indices
-    1) Start with the first soma and subtract from mesh
-    2) Find all of the disconnected mesh pieces
-    3) If there is still a soma piece that has not been processed, find the soma piece that is containing each soma and make into groups
-    4) skeletonize all of the pieces that not have somas associated with them
-    - if have lists from step 3, call the function for each of them, 
-    4b) once recieve all of the skeletons then stitch together on that soma
-    
-    """
-    
-    
-    
-    #------ do the skeletonization of the soma touchings --------#
-    print("\n\n ---- Working on soma touching skeletons ------")
-
-    soma_touching_time = time.time()
-    
-    
-    
-    """ OLD WAY OF DOING THE SKELETONS FOR THE SOMA TOUCHING THAT DOES DOUBLE SKELETONIZATION 
-    
-    # ***** this part will have a repeat of the meshes that contain the soma *** #
-    soma_touching_meshes = dict([(i,split_meshes[m_i]) 
-                                 for i,m_i in containing_mesh_indices.items()])
-    soma_touching_meshes_skeletons = []
-    
-    
-    for s_i,main_mesh in soma_touching_meshes.items():
-        #Do the mesh subtraction to get the disconnected pieces
-        current_soma = soma_mesh_list[s_i]
-
-        mesh_pieces = sm.subtract_soma(current_soma,main_mesh)
-        print(f"mesh_pieces after the soma subtraction = {len(mesh_pieces)}")
-        #get each branch skeleton
-        total_soma_skeletons = []
-        for dendrite_index,picked_dendrite in enumerate(mesh_pieces):
-            dendrite_name=current_name + f"_soma_{s_i}_branch_{dendrite_index}"
-            print(f"\n\nWorking on {dendrite_name}")
-            stitched_dendrite_skeleton = skeletonize_connected_branch(picked_dendrite,
-                                                           output_folder=mesh_base_path,
-                                                           name=dendrite_name,
-                                                            skeleton_print = True)
-
-            if len(stitched_dendrite_skeleton)<=0:
-                print(f"*** Dendrite {dendrite_index} did not have skeleton computed***")
-            else: 
-                total_soma_skeletons.append(stitched_dendrite_skeleton)
-
-    
-    
-    #stitching together the soma parts:
-    soma_stitched_skeleton = soma_skeleton_stitching(total_soma_skeletons,current_soma)
-    
-    """
-    
-    
-    # ---------------------- NEW WAY OF DOING THE SKELETONIZATION OF THE SOMA CONTAINING PIECES ------- #
-    # rearrange into lists of somas per mesh soma 
-    meshes_mapped_to_somas = sm.grouping_containing_mesh_indices(containing_mesh_indices)
-
-    print(f"meshes_mapped_to_somas = {meshes_mapped_to_somas}")
-
-    soma_stitched_skeleton = []
-    soma_mesh_list_indexes = list(np.arange(len(soma_mesh_list_centers)))
-    
-    #recursive call to the function to find all those skeletons for the 
-    #mesh groupings 
-    for mesh_idx,soma_list in meshes_mapped_to_somas.items():
-        mesh_soma_list = [k for i,k in enumerate(soma_mesh_list) if i in soma_list]
-        mesh_soma_list_indexes = [k for i,k in enumerate(soma_mesh_list_indexes) if i in soma_list]
-        mesh_soma_list_centers = [k for i,k in enumerate(soma_mesh_list_centers) if i in soma_list]
-
-        print(f"mesh_soma_list = {mesh_soma_list}\n"
-            f"mesh_soma_list_indexes = {mesh_soma_list_indexes}\n"
-             f"mesh_soma_list_centers = {mesh_soma_list_centers}\n")
-
-
-        soma_mesh_skeleton = recursive_soma_skeletonization(
-                                      split_meshes[mesh_idx],
-                                      soma_mesh_list=mesh_soma_list,
-                                        soma_mesh_list_indexes = mesh_soma_list_indexes,
-                                      soma_mesh_list_centers=mesh_soma_list_centers,
-                                    mesh_base_path=mesh_base_path,
-                                    current_name=current_name
-        )
-
-        soma_stitched_skeleton.append(soma_mesh_skeleton)
-        
-    print(f"Total time for soma touching skeletons: {time.time() - soma_touching_time}")
-    # ----------------------DONE WITH SKELETONIZATION OF THE SOMA CONTAINING PIECES ------- #
-    
-    
-    #------ do the skeletonization of the NON soma touchings --------#
-    print("\n\n ---- Working on non-soma touching skeletons ------")
-    non_soma_time = time.time()
-
-    non_soma_touching_meshes
-
-    total_non_soma_skeletons = []
-    for j,picked_non_soma_branch in enumerate(non_soma_touching_meshes):
-    #     if j<66:
-    #         continue
-        dendrite_name=current_name + f"_non_soma_{j}"
-        print(f"\n\nWorking on {dendrite_name}")
-        stitched_dendrite_skeleton = skeletonize_connected_branch(picked_non_soma_branch,
-                                                       output_folder=mesh_base_path,
-                                                       name=dendrite_name,
-                                                        skeleton_print = True)
-
-        if len(stitched_dendrite_skeleton)<=0:
-            print(f"*** Dendrite {dendrite_index} did not have skeleton computed***")
-        else: 
-            total_non_soma_skeletons.append(stitched_dendrite_skeleton)
-
-
-    print(f"Time for non-soma skeletons = {time.time() - non_soma_time}")
-    
-    # --------- Doing the stitching of the skeletons -----------#
-    try:
-        stacked_non_soma_skeletons = stack_skeletons(total_non_soma_skeletons)
-    except:
-        print(f"stacked_non_soma_skeletons = {stacked_non_soma_skeletons}")
-        raise Exception("stacked_non_soma_skeletons stack failed ")
-    
-    try:
-        stacked_soma_skeletons = stack_skeletons(soma_stitched_skeleton)
-    except:
-        print(f"soma_stitched_skeleton = {soma_stitched_skeleton}")
-        raise Exception("soma_stitched_skeleton stack failed ")
-    
-    
-    try:
-        whole_skeletons_for_stitching = stack_skeletons([stacked_non_soma_skeletons,stacked_soma_skeletons])
-    except: 
-        print(f"[stacked_non_soma_skeletons,stacked_soma_skeletons] = {[stacked_non_soma_skeletons,stacked_soma_skeletons]}")
-        raise Exception("[stacked_non_soma_skeletons,stacked_soma_skeletons] stack failed")
-
-    final_skeleton_pre_clean = stitch_skeleton(
-                                                      whole_skeletons_for_stitching,
-                                                      stitch_print = False,
-                                                      main_mesh = []
-                                                    )
-    
-    # --------  Doing the cleaning ------- #
-    clean_time = time.time()
-    new_cleaned_skeleton = clean_skeleton(final_skeleton_pre_clean,
-                            distance_func=skeletal_distance,
-                      min_distance_to_junction=filter_end_node_length,
-                      return_skeleton=True,
-                      print_flag=False)
-    print(f"Total time for skeleton clean {time.time() - clean_time}")
-    
-    print(f"\n\n\n\nTotal time for whole skeletonization of neuron = {time.time() - global_time}")
-    return new_cleaned_skeleton
-
-
-
 # ------ Functions to help with the compartment ---- #
 # converted into a function
-import networkx_utils as xu
-import networkx as nx
-import matplotlib.pyplot as plt
 
 def get_ordered_branch_nodes_coordinates(skeleton_graph,nodes=False,coordinates=True):
 
@@ -4218,7 +3737,6 @@ def resize_skeleton_branch(
     return new_skeleton
 
 
-from scipy.spatial.distance import pdist,squareform
 def skeleton_graph_nodes_to_group(skeleton_grpah):
     """
     Checks that no nodes in graph are in the same coordinates and need to be combined
@@ -4643,9 +4161,6 @@ def check_skeleton_one_component(curr_skeleton):
     
 
 # ---------------- 9/17: Will help with creating branch points extending towards soma if not already exist ---
-from pykdtree.kdtree import KDTree
-import networkx_utils as xu
-import time
 
 def create_soma_extending_branches(
     current_skeleton, #current skeleton that was created
@@ -4808,7 +4323,6 @@ def create_soma_extending_branches(
     return return_value
 
 
-import numpy_utils as nu
 def find_branch_skeleton_with_specific_coordinate(divded_skeleton,current_coordinate):
     """
     Purpose: From list of skeletons find the ones that have a certain coordinate
@@ -4833,7 +4347,6 @@ def find_branch_skeleton_with_specific_coordinate(divded_skeleton,current_coordi
     return matching_branch
 
 #----------- 9/24 -------------- #
-import networkx_utils as xu
 def find_skeleton_endpoint_coordinates(
     skeleton,
     coordinates_to_exclude = None,
@@ -4866,7 +4379,7 @@ def find_skeleton_endpoint_coordinates(
         endpoint_coordinates = nu.setdiff2d(np.array(endpoint_coordinates).reshape(-1,3),np.array(coordinates_to_exclude).reshape(-1,3))
         
     if plot:
-        nviz.plot_objects(
+        ipvu.plot_objects(
             main_skeleton=skeleton,
             scatters=[endpoint_coordinates],
             scatter_size=1
@@ -4910,7 +4423,6 @@ def path_ordered_skeleton(skeleton):
     return ordered_skeleton
 
 # ----------- 1/6 Addition: To help and not filter away significant skeleton pieces --------- #
-import trimesh_utils as tu
 def find_end_nodes_with_significant_mesh_correspondence(
     skeleton,
     mesh,
@@ -4944,7 +4456,7 @@ def find_end_nodes_with_significant_mesh_correspondence(
     endnode_coordinates = xu.get_coordinate_by_graph_node(sk_graph,end_nodes)
     high_degree_coordinates = xu.get_coordinate_by_graph_node(sk_graph,high_degree_nodes)
 
-    nviz.plot_objects(mesh,
+    ipvu.plot_objects(mesh,
                      skeletons=[current_skeleton],
                      scatters=[endnode_coordinates,high_degree_coordinates],
                      scatters_colors=["red","blue"],
@@ -4981,7 +4493,7 @@ def find_end_nodes_with_significant_mesh_correspondence(
         """
         Checking viable paths were made:
 
-        nviz.plot_objects(mesh,
+        ipvu.plot_objects(mesh,
                          skeletons=viable_end_node_skeletons,
                          scatters=[endnode_coordinates,high_degree_coordinates],
                          scatters_colors=["red","blue"],
@@ -4995,7 +4507,7 @@ def find_end_nodes_with_significant_mesh_correspondence(
                                                )
 
             if plot_viable_endpoint_correspondences:
-                nviz.plot_objects(meshes=viable_skeleton_meshes,
+                ipvu.plot_objects(meshes=viable_skeleton_meshes,
                           meshes_colors="random",
                           skeletons=viable_end_node_skeletons,
                          skeletons_colors="random")
@@ -5016,7 +4528,7 @@ def find_end_nodes_with_significant_mesh_correspondence(
         if len(keep_node_coordinates) == 0:
             print("!!! NO KEEP ENDPOINTS FOUND !!!")
         else:
-            nviz.plot_objects(mesh,
+            ipvu.plot_objects(mesh,
                          skeletons=[current_skeleton],
                          scatters=[keep_node_coordinates],
                          scatters_colors=["red"],
@@ -5026,7 +4538,6 @@ def find_end_nodes_with_significant_mesh_correspondence(
 
 
 # ---------------------- For preprocessing of neurons revised ------------------ #
-import system_utils as su
 def skeletonize_and_clean_connected_branch_CGAL(mesh,
                        curr_soma_to_piece_touching_vertices=None,
                        total_border_vertices=None,
@@ -5078,12 +4589,12 @@ def skeletonize_and_clean_connected_branch_CGAL(mesh,
 
 #                     sk_debug = True
 #                     if sk_debug:
-#                         import system_utils as su
+#                         from python_tools import system_utils as su
 #                         print("**Saving the skeletons**")
 #                         su.compressed_pickle(branch,
 #                                             "curr_branch_saved")
 #                     if sk_debug:
-#                         import system_utils as su
+#                         from python_tools import system_utils as su
 #                         print("**Saving the skeletons**")
 #                         su.compressed_pickle(current_skeleton,
 #                                             "current_skeleton")
@@ -5117,7 +4628,7 @@ def skeletonize_and_clean_connected_branch_CGAL(mesh,
 
     #                     sk_debug = True
     #                     if sk_debug:
-    #                         import system_utils as su
+    #                         from python_tools import system_utils as su
     #                         print("**Saving the skeletons**")
     #                         su.compressed_pickle(current_skeleton,
     #                                             "current_skeleton_after_addition")
@@ -5188,7 +4699,7 @@ def skeletonize_and_clean_connected_branch_CGAL(mesh,
 
 #                     sk_debug = True
 #                     if sk_debug:
-#                         import system_utils as su
+#                         from python_tools import system_utils as su
 #                         print("**Saving the skeletons**")
 #                         su.compressed_pickle(new_cleaned_skeleton,
 #                                             "new_cleaned_skeleton")
@@ -5411,7 +4922,6 @@ def remove_cycles_from_skeleton(skeleton,
 
 
 
-import itertools
 def skeleton_list_connectivity(skeletons,
     print_flag = False):
     """
@@ -5609,7 +5119,7 @@ def cut_skeleton_at_coordinate(skeleton,
     new_sk_cuts = sk.cut_skeleton_at_coordinate(skeleton=ex_sk,
                               cut_coordinate=cut_coordinate)
 
-    nviz.plot_objects(skeletons=new_sk_cuts,
+    ipvu.plot_objects(skeletons=new_sk_cuts,
                      skeletons_colors="random",
                      scatters=[cut_coordinate])
     
@@ -6014,7 +5524,6 @@ def shared_endpoint(skeleton_1,skeleton_2,return_possibly_two=False):
     else:
         return node_connectivity
     
-import numpy_utils as nu
 def matching_endpoint_singular(
     array_1,
     array_2,
@@ -6233,8 +5742,6 @@ def restrict_skeleton_from_start(skeleton,
     return return_values
 
 
-from tqdm_utils import tqdm
-from pykdtree.kdtree import KDTree
 
 def matching_skeleton_branches_by_vertices(branches):
     
@@ -6339,7 +5846,7 @@ def offset_skeletons_aligned_at_shared_endpoint(skeletons,
     stripped_skeletons = sk.offset_skeletons_aligned_at_shared_endpoint(curr_skeletons)
 
     curr_colors = ["red","black"]
-    nviz.plot_objects(meshes=[k.mesh for k in vis_branches],
+    ipvu.plot_objects(meshes=[k.mesh for k in vis_branches],
                       meshes_colors=curr_colors,
                       skeletons=stripped_skeletons,
                       skeletons_colors=curr_colors,
@@ -6440,8 +5947,6 @@ def offset_skeletons_aligned_parent_child_skeletal_angle(skeleton_1,skeleton_2,
     return curr_angle
 
 
-from tqdm_utils import tqdm
-from pykdtree.kdtree import KDTree
 
 def map_between_branches_lists(branches_1,branches_2,check_all_matched=True,
                               min_to_match = 2):
@@ -6573,7 +6078,7 @@ def restrict_skeleton_from_start_plus_offset(skeleton,
     stripped_skeletons = sk.offset_skeletons_aligned_at_shared_endpoint(curr_skeletons)
 
     curr_colors = ["red","black"]
-    nviz.plot_objects(meshes=[k.mesh for k in vis_branches],
+    ipvu.plot_objects(meshes=[k.mesh for k in vis_branches],
                       meshes_colors=curr_colors,
                       skeletons=stripped_skeletons,
                       skeletons_colors=curr_colors,
@@ -6624,7 +6129,7 @@ def restrict_skeleton_from_start_plus_offset(skeleton,
         
     if plot:
         if len(ret_sk) > 0:
-            nviz.plot_objects(
+            ipvu.plot_objects(
                                  skeletons=[ret_sk,skeleton],
                                  skeletons_colors=["green","blue"],
                                   scatters=[start_coordinate,ret_sk[0][0],ret_sk.reshape(-1,3)],
@@ -6688,9 +6193,6 @@ def high_degree_coordinates_on_path(limb_obj,curr_path_to_cut,
 
 
 # ---------- 2/15: Help with Getting path from synapses from to soma ------- #
-import networkx_utils as xu
-import networkx as nx
-import matplotlib_utils as mu
 
 
 
@@ -6825,8 +6327,8 @@ def skeleton_path_between_skeleton_coordinates(starting_coordinate,
             output.append(curr_skeleton)
 
             if plot_skeleton_path:
-                import neuron_visualizations as nviz
-                nviz.plot_objects(main_skeleton=skeleton,
+                from meshAfterParty import neuron_visualizations as nviz
+                ipvu.plot_objects(main_skeleton=skeleton,
                                  skeletons=[curr_skeleton],
                                  skeletons_colors="red",
                                  scatters=[st_coord,destination_coordinate],
@@ -6930,7 +6432,7 @@ def closest_skeleton_coordinates(
         skeleton_coord_color = "red"
         print(f"coordinates = {coord_color}, found skeleton colors = {skeleton_coord_color}")
         
-        nviz.plot_objects(
+        ipvu.plot_objects(
             main_skeleton = skeleton,
             scatters = [coordinates,closest_coords],
             scatters_colors = [coord_color,skeleton_coord_color]
@@ -6946,7 +6448,6 @@ def closest_skeleton_coordinates(
         
     
 
-import neuron_visualizations as nviz
 def high_degree_coordinates_on_skeleton(skeleton,
                                        min_degree_to_find=4,
                                              exactly_equal=False,
@@ -6986,7 +6487,7 @@ def high_degree_coordinates_on_skeleton(skeleton,
         if len(curr_high_degree_coordinates)==0:
             print("*** No HIGH DEGREE COORDINATES TO PLOT ****")
         else:
-            nviz.plot_objects(skeletons = [skeleton],
+            ipvu.plot_objects(skeletons = [skeleton],
                              scatters=curr_high_degree_coordinates,
                              scatters_colors="red",
                              scatter_size=0.3)
@@ -7071,7 +6572,7 @@ def shortest_path_between_two_sets_of_skeleton_coordiantes(
             
         if skeleton is None:
             skeleton = sk.convert_graph_to_skeleton(sk_graph)
-        nviz.plot_objects(main_skeleton=skeleton,
+        ipvu.plot_objects(main_skeleton=skeleton,
                          skeletons=[shortest_skeleton_path],
                          skeletons_colors="red",
                          scatters=[node_1_coordinate,node_2_coordinate],
@@ -7093,7 +6594,7 @@ def restrict_skeleton_to_distance_from_coordinate(skeleton,
     retr_skeleton = sk.restrict_skeleton_to_distance_from_coordinate(neuron_obj[0].skeleton,
                                                  neuron_obj[0].current_starting_coordinate,
                                                  10000,)
-    nviz.plot_objects(main_skeleton=neuron_obj[0].skeleton,
+    ipvu.plot_objects(main_skeleton=neuron_obj[0].skeleton,
                      skeletons=[restr_skeleton],
                      skeletons_colors="red")     
     
@@ -7152,7 +6653,7 @@ def skeleton_coordinate_offset_from_endpoint(skeleton,
         print(f"Restriction of skeleton by {offset_distance} was success = {success}"
              f" and point is {curr_point}")
     if plot_coordinate:
-        nviz.plot_objects(skeletons=[skeleton],
+        ipvu.plot_objects(skeletons=[skeleton],
                  scatters=[endpoint_coordinate.reshape(-1,3),
                           curr_point.reshape(-1,3)],
                          scatter_size=1,
@@ -7194,7 +6695,6 @@ def skelton_coordinate_path_to_skeleton(skeleton_coordinate_path):
     return np.hstack([x[:-1],x[1:]]).reshape(-1,2,3)
 
 
-from pykdtree.kdtree import KDTree
 def closest_distances_from_skeleton_vertices_to_base_skeleton(skeleton,
                                                                base_skeleton,
                                                               verbose = False,
@@ -7226,7 +6726,7 @@ def closest_distances_from_skeleton_vertices_to_base_skeleton(skeleton,
         sk2_min_coord = sk2_coords[min_idx]
         sk1_min_coord = sk1_coords[closest_index[min_idx]]
         
-        nviz.plot_objects(skeletons = [skeleton,base_skeleton],
+        ipvu.plot_objects(skeletons = [skeleton,base_skeleton],
                           skeletons_colors=["red","blue"],
                          scatters=[sk2_min_coord,sk1_min_coord],
                          scatters_colors=["red","blue"])
@@ -7260,7 +6760,7 @@ def resize_skeleton_with_branching(
     if verbose:
         print(f"Time for resize_skeleton_with_branching = {time.time() - st}")
     if plot:
-        nviz.plot_objects(main_skeleton = return_sk)
+        ipvu.plot_objects(main_skeleton = return_sk)
     return return_sk
 
 # --------- 7/29: helped with apical classifications ---------- #
@@ -7291,7 +6791,7 @@ def order_resize_skeleton(skeleton,
                                                  **kwargs)
         
     if plot_skeleton:
-        nviz.plot_objects(
+        ipvu.plot_objects(
                      skeletons=[sk_ord_resize],
                      scatters=[sk_ord_resize[0][0]],
                      scatter_size=1,
@@ -7317,7 +6817,6 @@ def skeleton_vectors(skeleton,
     skeleton_vectors = [sk.skeleton_endpoint_vector(k.reshape(-1,2,3)) for k in branch_sk_ord_resized]
     return skeleton_vectors
 
-import numpy_utils as nu
 def angle_between_skeleton_vectors_and_ref_vector(reference_vector,
     skeleton_vectors = None,
     skeleton=None,
@@ -7437,7 +6936,7 @@ def coordinates_along_skeleton_offset_from_start(
     2) Resize the skeleton
     
     Ex: 
-    import skeleton_utils as sk
+    from mesh_tools import skeleton_utils as sk
     import numpy as np
 
 
@@ -7457,7 +6956,7 @@ def coordinates_along_skeleton_offset_from_start(
     #                                     segment_width = 20)
 
     if plot_starting_skeleton:
-        nviz.plot_objects(main_skeleton = skeleton,
+        ipvu.plot_objects(main_skeleton = skeleton,
                          scatters=[starting_coordinate],
                          scatter_size=1)
     if verbose:
@@ -7477,7 +6976,7 @@ def coordinates_along_skeleton_offset_from_start(
         print(f"skeleton_rest distance = {curr_skeleton_dist}")
 
     if plot_restricted_skeleton:
-        nviz.plot_objects(main_skeleton = skeleton,
+        ipvu.plot_objects(main_skeleton = skeleton,
                           skeletons = [skeleton_rest],
                           skeletons_colors="red",
                          scatters=[starting_coordinate],
@@ -7536,7 +7035,7 @@ def coordinates_along_skeleton_offset_from_start(
         start_point_color = "blue"
         points_color = "red"
         print(f"start_point_color = {start_point_color}, points_color = {points_color}")
-        nviz.plot_objects(main_skeleton = skeleton,
+        ipvu.plot_objects(main_skeleton = skeleton,
                       #skeletons = [skeleton_rest],
                       skeletons_colors=["red"],
                      scatters=[starting_coordinate,points_array],
@@ -7549,7 +7048,6 @@ def coordinates_along_skeleton_offset_from_start(
     return points_array
 
 
-import h5py
 def skeleton_from_h5py(file,
                       verbose = False):
     with h5py.File(file, 'r') as hf:
@@ -7562,8 +7060,6 @@ def skeleton_from_h5py(file,
     return skeleton_manual
 
 
-import numpy_utils as nu
-import neuron_visualizations as nviz
 
 def mesh_subtraction_by_skeleton(
 
@@ -7615,7 +7111,7 @@ def mesh_subtraction_by_skeleton(
         return_one=True,
     )
 
-    import neuron_visualizations as nviz
+    from meshAfterParty import neuron_visualizations as nviz
     nviz.visualize_neuron(neuron_obj,limb_branch_dict="all")
 
 
@@ -7668,7 +7164,7 @@ def mesh_subtraction_by_skeleton(
 
     if initial_plotting:
         print(f"Before Resize")
-        nviz.plot_objects(main_mesh_bbox_restricted,
+        ipvu.plot_objects(main_mesh_bbox_restricted,
                          main_skeleton = edges)  
 
     if resize_length is not None:
@@ -7682,7 +7178,7 @@ def mesh_subtraction_by_skeleton(
 
     if initial_plotting:
         print(f"After Resize")
-        nviz.plot_objects(main_mesh_bbox_restricted,
+        ipvu.plot_objects(main_mesh_bbox_restricted,
                          main_skeleton = edges)  
 
 
@@ -7736,7 +7232,7 @@ def mesh_subtraction_by_skeleton(
             print(f"len(slice_mask_z_idx) = {len(slice_mask_z_idx)}")
         if edge_loop_plotting_slice:
             print("slice_mask_z_idx")
-            nviz.plot_objects(main_mesh_bbox_restricted,
+            ipvu.plot_objects(main_mesh_bbox_restricted,
                              meshes=[main_mesh_bbox_restricted.submesh([slice_mask_z_idx],append=True,only_watertight=False)],
                              meshes_colors="red",
                               skeletons=[ex_edge]
@@ -7749,7 +7245,7 @@ def mesh_subtraction_by_skeleton(
             print(f"len(slice_mask_xy_idx) = {len(slice_mask_xy_idx)}")
         if edge_loop_plotting_slice:
             print("slice_mask_xy_idx")
-            nviz.plot_objects(main_mesh_bbox_restricted,
+            ipvu.plot_objects(main_mesh_bbox_restricted,
                              meshes=[main_mesh_bbox_restricted.submesh([slice_mask_xy_idx],append=True,only_watertight=False)],
                              meshes_colors="red",
                               skeletons=[ex_edge]
@@ -7761,7 +7257,7 @@ def mesh_subtraction_by_skeleton(
             print(f"len(slice_idx) = {len(slice_idx)}")
         if edge_loop_plotting_slice:
             print("slice_idx")
-            nviz.plot_objects(main_mesh_bbox_restricted,
+            ipvu.plot_objects(main_mesh_bbox_restricted,
                              meshes=[main_mesh_bbox_restricted.submesh([slice_idx],append=True,only_watertight=False)],
                              meshes_colors="red",
                               skeletons=[ex_edge]
@@ -7799,7 +7295,7 @@ def mesh_subtraction_by_skeleton(
 
         if edge_loop_plotting:
             print(f"sub_components")
-            nviz.plot_objects(meshes=sub_components,
+            ipvu.plot_objects(meshes=sub_components,
                              meshes_colors="random",
                              main_skeleton=ex_edge.reshape(-1,2,3))
 
@@ -7856,9 +7352,9 @@ def mesh_subtraction_by_skeleton(
 
         if edge_loop_plot_winning_faces:
             print(f"Winning mesh without faces")
-            nviz.plot_objects(submesh_by_trimesh)
+            ipvu.plot_objects(submesh_by_trimesh)
             print(f"Winning mesh WITH faces")
-            nviz.plot_objects(submesh_by_faces_idx)
+            ipvu.plot_objects(submesh_by_faces_idx)
 
 
 
@@ -7895,7 +7391,7 @@ def mesh_subtraction_by_skeleton(
 
     if plot_final_mesh:
         print(f"plot_final_mesh")
-        nviz.plot_objects(new_submesh)
+        ipvu.plot_objects(new_submesh)
 
 
     if final_split_n_faces_min > 0 and not return_subtracted_mesh:
@@ -7904,7 +7400,7 @@ def mesh_subtraction_by_skeleton(
                                                              print_flag=False)
         if plot_final_mesh:
             print(f"significant_pieces")
-            nviz.plot_objects(meshes=significant_pieces,
+            ipvu.plot_objects(meshes=significant_pieces,
                              meshes_colors="random")
 
         return_value = significant_pieces
@@ -8000,7 +7496,6 @@ def vector_away_from_endpoint(
     return sk_vec
 
 
-from pykdtree.kdtree import KDTree
 def coordinates_from_downstream_dist(
     skeleton,
     donwstream_dists,
@@ -8038,8 +7533,8 @@ def coordinates_from_downstream_dist(
         print(f"coordinates = {coordinates.shape}")
         
     if plot:
-        import matplotlib_utils as mu
-        nviz.plot_objects(
+        from python_tools import matplotlib_utils as mu
+        ipvu.plot_objects(
             scatters=[k.reshape(-1,3) for k in coordinates],
             scatters_colors=list(mu.color_transition(n=len(coordinates))),
             scatter_size=0.5
@@ -8048,7 +7543,6 @@ def coordinates_from_downstream_dist(
     return coordinates
 
 
-from pykdtree.kdtree import KDTree
 
 def coordinate_restriction_to_skeleton(
     skeleton,
@@ -8111,7 +7605,7 @@ def coordinate_restriction_to_skeleton(
         final_color  = "black"
         print(f"original_color = {original_color}, fianl_color = {final_color}")
 
-        nviz.plot_objects(
+        ipvu.plot_objects(
                 skeletons=[skeleton,skeleton_new],
             skeletons_colors=[original_color,final_color]
 
@@ -8188,7 +7682,7 @@ def subskeleton_from_vertices_idx(
         original_color = "black"
         sub_color = "red"
         print(f"Original skeleton ({original_color}), subskeleton color ({sub_color})")
-        nviz.plot_objects(
+        ipvu.plot_objects(
             skeletons = [original_sk,new_skeleton],
             skeletons_colors = [original_color,sub_color]
         )
@@ -8220,14 +7714,13 @@ def mesh_restriction_to_skeleton(
         else:
             curr_sk = new_sk
             
-        nviz.plot_objects(
+        ipvu.plot_objects(
             mesh,
             new_sk,
         )
     
     return new_sk
 
-import statistics_utils as stu
 def accuracy_stats_from_true_predicted_skeleton(
     true_skeleton,
     predicted_skeleton,
@@ -8313,7 +7806,7 @@ def accuracy_stats_from_true_predicted_skeleton(
     if plot_skeleton_categories:
         for k,curr_sk in result_dict.items():
             print(f"\n---Plotting {k}")
-            nviz.plot_objects(mesh,curr_sk)
+            ipvu.plot_objects(mesh,curr_sk)
 
 
     # calculates the skeletal length
@@ -8467,13 +7960,26 @@ def setdiff_skeleton(
         **kwargs
     )
 
+
+#--- from mesh_tools ---
+from . import meshparty_skeletonize as m_sk
+from . import trimesh_utils as tu
+from .trimesh_utils import split_significant_pieces,split,combine_meshes,write_neuron_off
+
+
+#--- from python_tools ---
+from python_tools import general_utils as gu
+from python_tools import ipyvolume_utils as ipvu
+from python_tools import matplotlib_utils as mu
+from python_tools import mesh_utils as meshu
+from python_tools import networkx_utils as xu
+from python_tools import numpy_utils as nu
+from python_tools import statistics_utils as stu
+from python_tools import system_utils as su
+from python_tools.tqdm_utils import tqdm
+
 unique_vertices_edges_from_vertices_edges = xu.unique_vertices_edges_from_vertices_edges
 graph_from_unique_vertices_edges = xu.graph_from_unique_vertices_edges
 graph_from_non_unique_vertices_edges= xu.graph_from_non_unique_vertices_edges
 
-    
-
-
-
-
-import skeleton_utils as sk
+from . import skeleton_utils as sk

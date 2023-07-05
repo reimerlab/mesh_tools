@@ -1,18 +1,28 @@
-"""
+'''
+
+
 These functions just help with generically 
 helping with trimesh mesh manipulation
-"""
 
-import trimesh
-import numpy as np
+
+'''
+import copy
+import h5py
+import itertools
+import logging
+import matplotlib.pyplot as plt
 import networkx as nx
-from pykdtree.kdtree import KDTree
-import time
-
-import numpy_utils as nu
+import numpy as np
+import numpy as  np
+import open3d as o3d
+import pandas as pd
 from pathlib import Path
-from tqdm_utils import tqdm
-
+from pykdtree.kdtree import KDTree
+import pymeshfix
+import time
+import trimesh
+from trimesh.path.exchange.misc import faces_to_path
+from trimesh import triangles
 
 
 #loading a mesh safely without any processing to mess up the vertices/faces
@@ -27,7 +37,6 @@ def load_mesh_no_processing(current_mesh_file):
     return trimesh.load_mesh(current_mesh_file,process=False)
 
 # --------- Dealing with h5 files
-import h5py
 def load_mesh_no_processing_h5(current_mesh_file):
     """
     Will load a mesh from h5py file format
@@ -261,7 +270,7 @@ def bounding_box_center(mesh,oriented=False):
     
     Ex:
     ex_mesh = neuron_obj_with_web[axon_limb_name][9].mesh
-    nviz.plot_objects(ex_mesh,
+    ipvu.plot_objects(ex_mesh,
                       scatters=[tu.bounding_box_center(ex_mesh)],
                       scatter_size=1)
     """
@@ -464,8 +473,6 @@ def check_meshes_inside_mesh_bbox(main_mesh,test_meshes,
     else:
         return [k for i,k in enumerate(test_meshes) if i in return_idx]
     
-import numpy_utils as nu
-import numpy as np
 def check_meshes_outside_multiple_mesh_bbox(main_meshes,test_meshes,
                                   return_indices=False):
     return check_meshes_inside_multiple_mesh_bbox(main_meshes,test_meshes,
@@ -488,7 +495,7 @@ def check_meshes_inside_multiple_mesh_bbox(main_meshes,test_meshes,
     3) Return either the meshes or indices
     
     Ex: 
-    import trimesh_utils as tu
+    from mesh_tools import trimesh_utils as tu
     tu = reload(tu)
     tu.check_meshes_inside_multiple_mesh_bbox([soma_mesh,soma_mesh,soma_mesh],neuron_obj.non_soma_touching_meshes,
                                  return_indices=False)
@@ -528,8 +535,6 @@ def check_meshes_inside_multiple_mesh_bbox(main_meshes,test_meshes,
     
 
 # main mesh cancellation
-import numpy as  np
-import system_utils as su
 # --------------- 12/3 Addition: Made the connectivity matrix from the vertices by default ------------- #
 def split_significant_pieces_old(new_submesh,
                             significance_threshold=100,
@@ -546,7 +551,7 @@ def split_significant_pieces_old(new_submesh,
     
     if print_flag:
         print("------Starting the mesh filter for significant outside pieces-------")
-#     import system_utils as su
+#     from python_tools import system_utils as su
 #     su.compressed_pickle(new_submesh,f"new_submesh_{np.random.randint(10,1000)}")
     if connectivity=="edges":
         mesh_pieces = new_submesh.split(only_watertight=False,repair=False)
@@ -640,7 +645,7 @@ def split_significant_pieces(new_submesh,
     
     if print_flag:
         print("------Starting the mesh filter for significant outside pieces-------")
-#     import system_utils as su
+#     from python_tools import system_utils as su
 #     su.compressed_pickle(new_submesh,f"new_submesh_{np.random.randint(10,1000)}")
     if connectivity=="edges":
         """ Old way that did not have options for the indices 
@@ -874,7 +879,7 @@ def split(mesh, only_watertight=False,
     try:
         ordered_comp_indices = np.array([k.astype("int") for k in ordered_components])
     except:
-        import system_utils as su
+        from python_tools import system_utils as su
         su.compressed_pickle(ordered_components,"ordered_components")
         print(f"ordered_components = {ordered_components}")
         raise Exception("ordered_components")
@@ -961,7 +966,6 @@ def compare_meshes_by_face_midpoints(mesh1,mesh2,match_threshold=0.001,print_fla
             print("Meshes are equal!")
         return True
     
-import time
 def original_mesh_vertices_map(original_mesh, submesh=None,
                                vertices_coordinates=None,
                                matching=True,
@@ -1767,7 +1771,7 @@ def split_mesh_into_face_groups(
         
     if plot:
         total_submeshes = np.array(list(total_submeshes.values()))
-        nviz.plot_objects(
+        ipvu.plot_objects(
             meshes = list(total_submeshes),
             meshes_colors = "random",
         )
@@ -2040,8 +2044,6 @@ def vertices_to_faces(current_mesh,vertices,
         su.compressed_pickle(vertices,"vertices_error_v_to_f")
         raise Exception("Something went wrong in vertices to faces")
 
-import numpy_utils as nu
-import system_utils as su
 def vertices_coordinates_to_faces_old(current_mesh,vertex_coordinates):
     """
     
@@ -2072,8 +2074,6 @@ def vertices_coordinates_to_faces_old(current_mesh,vertex_coordinates):
     return unique_border_faces
 
 
-import networkx as nx
-import networkx_utils as xu
 def mesh_vertex_graph(mesh):
     """
     Purpose: Creates a weighted connectivity graph from the vertices and edges
@@ -2145,7 +2145,7 @@ def find_border_vertices(
     
     if plot:
         coords = np.array(mesh.vertices[vertices_idx]).reshape(-1,3)
-        nviz.plot_objects(
+        ipvu.plot_objects(
             mesh,
             scatters = [coords],
         )
@@ -2215,7 +2215,7 @@ def find_border_vertex_groups(
     """
     if plot:
         scatters = [mesh.vertices[list(k)] for k in border_edge_groups]
-        nviz.plot_objects(mesh,scatters= scatters,scatters_colors = "random")
+        ipvu.plot_objects(mesh,scatters= scatters,scatters_colors = "random")
     
     if return_coordinates:
         return_value = [mesh.vertices[list(k)] for k in border_edge_groups]
@@ -2362,7 +2362,6 @@ def mesh_with_ends_cutoff(mesh,n_iterations=5,
     
 '''
 # Old method that only computed percentage of total number of border vertices
-from pykdtree.kdtree import KDTree
 def filter_away_border_touching_submeshes(
                             mesh,
                             submesh_list,
@@ -2425,8 +2424,6 @@ def filter_away_border_touching_submeshes(
     else:
         return passed_idx
 '''
-from pykdtree.kdtree import KDTree
-import numpy as np
 
 def filter_away_border_touching_submeshes_by_group(
                             mesh,
@@ -2572,7 +2569,7 @@ def max_distance_betwee_mesh_vertices(mesh_1,mesh_2,
             return True
 
 try:
-    import meshlab
+    from mesh_tools import meshlab
 except:
     pass
 
@@ -2634,7 +2631,7 @@ def filter_meshes_by_containing_coordinates(mesh_list,nullifying_points,
             print(f"curr_kept_spines = {curr_kept_spines}")
             kept_spines += curr_kept_spines
 
-    nviz.plot_objects(meshes=kept_spines)
+    ipvu.plot_objects(meshes=kept_spines)
     """
     if not nu.is_array_like(mesh_list):
         mesh_list = [mesh_list]
@@ -2696,7 +2693,7 @@ def filter_meshes_by_containing_coordinates(mesh_list,nullifying_points,
 
 # --------------- 11/11 ---------------------- #
 try:
-    import meshlab 
+    from mesh_tools import meshlab 
 except:
     pass
 
@@ -2788,8 +2785,6 @@ def decimate(mesh,
     return new_mesh
         
 
-import pymeshfix
-import time
 
 def pymeshfix_clean(mesh,
                     joincomp = True,
@@ -2822,16 +2817,12 @@ def pymeshfix_clean(mesh,
     return current_neuron_poisson_pymeshfix
 
 
-from pathlib import Path
-import numpy as np
-import time
 
 try:
     import cgal_Segmentation_Module as csm
 except:
     pass
 
-import matplotlib_utils as mu
 def mesh_segmentation_largest_conn_comp(
         mesh = None,
         filepath = None,
@@ -2932,7 +2923,7 @@ def mesh_segmentation_largest_conn_comp(
         
     if plot_segmentation:
         print(f"Initial segmentation with clusters = {clusters}, smoothness = {smoothness}")
-        nviz.plot_objects(meshes=split_meshes,
+        ipvu.plot_objects(meshes=split_meshes,
                          meshes_colors=mu.generate_non_randon_named_color_list(len(split_meshes)))
     
     if return_meshes:
@@ -3120,7 +3111,7 @@ def mesh_segmentation(
 
     if plot_segmentation:
         print(f"Initial segmentation with clusters = {clusters}, smoothness = {smoothness}")
-        nviz.plot_objects(meshes=split_meshes,
+        ipvu.plot_objects(meshes=split_meshes,
                          meshes_colors=mu.generate_non_randon_named_color_list(len(split_meshes)),
                          buffer = plot_buffer)
 
@@ -3159,8 +3150,6 @@ def mesh_segmentation(
 https://gamedev.stackexchange.com/questions/61878/how-check-if-an-arbitrary-given-mesh-is-a-single-closed-mesh
 """
 
-import trimesh
-import open3d as o3d
 def convert_trimesh_to_o3d(mesh):
     if not type(mesh) == type(o3d.geometry.TriangleMesh()):
         new_o3d_mesh = o3d.geometry.TriangleMesh()
@@ -3259,7 +3248,7 @@ def connected_nondegenerate_mesh(
         print(f"# of faces kept = {len(kept_faces)}/{len(kept_faces) + len(not_kept_faces)}")
     if plot:
         print(f" --> red = kept mesh")
-        nviz.plot_objects(
+        ipvu.plot_objects(
             mesh,
             meshes = [conn_mesh[0]],
             meshes_colors = "red"
@@ -3413,14 +3402,11 @@ def filter_vertices_by_mesh(mesh,vertices):
     
 
 
-import time
-import copy
 def fill_holes_trimesh(mesh):
     mesh_copy = copy.deepcopy(mesh)
     trimesh.repair.fill_holes(mesh_copy)
     return mesh_copy
 
-import system_utils as su
 
 def mesh_volume_convex_hull(mesh):
     return mesh.convex_hull.volume
@@ -3549,7 +3535,6 @@ def mesh_volume(mesh,
         return final_volume
     
 
-import networkx as nx
 def vertex_components(mesh):
     return [list(k) for k in nx.connected_components(mesh.vertex_adjacency_graph)]
 
@@ -3594,7 +3579,7 @@ def components_to_submeshes(mesh,components,return_components=True,only_watertig
     try:
         ordered_comp_indices = np.array([k.astype("int") for k in ordered_components])
     except:
-        import system_utils as su
+        from python_tools import system_utils as su
         su.compressed_pickle(ordered_components,"ordered_components")
         print(f"ordered_components = {ordered_components}")
         raise Exception("ordered_components")
@@ -3641,7 +3626,6 @@ def split_by_vertices(
         return ordered_meshes
     
     
-import itertools
 def mesh_face_graph_by_vertex(mesh):
     """
     Create a connectivity graph based on the faces that touch the same vertex have a connection edge
@@ -3734,7 +3718,7 @@ def closest_mesh_coordinate_to_other_mesh(
         print(f"Closesst coordinate was {closest_coord} (dist = {closest_dist})")
         
     if plot:
-        nviz.plot_objects(
+        ipvu.plot_objects(
             meshes = [mesh,other_mesh],
             meshes_colors = ["red","green"],
             scatters = [closest_coord.reshape(-1,3)]
@@ -3815,7 +3799,6 @@ def face_neighbors_by_vertices_seperate(mesh,faces_list):
     f_verts = mesh.faces[faces_list]
     return [np.unique(k[k!=-1]) for k in mesh.vertex_faces[f_verts]]
 
-import compartment_utils as cu
 def skeleton_to_mesh_correspondence(mesh,
                                     skeletons,
                                     remove_inside_pieces_threshold = 100,
@@ -3842,7 +3825,7 @@ def skeleton_to_mesh_correspondence(mesh,
                                                 skeletons = viable_end_node_skeletons
                                    )
 
-    nviz.plot_objects(meshes=return_value,
+    ipvu.plot_objects(meshes=return_value,
                       meshes_colors="random",
                       skeletons=viable_end_node_skeletons,
                      skeletons_colors="random")
@@ -3924,7 +3907,7 @@ def mesh_segmentation_from_skeleton(
     3) Refines the correspondence so only 1 skeletal
     branch matched to each face
     """
-    import preprocessing_vp2 as pre
+    from meshAfterParty import preprocessing_vp2 as pre
 
     local_correspondence = pre.mesh_correspondence_first_pass(
         mesh,
@@ -3995,7 +3978,6 @@ def skeleton_and_mesh_segmentation(
     
 
 
-import numpy as np
 '''def find_large_dense_submesh(mesh,
                              glia_pieces=None, #the glia pieces we already want removed
                             verbose = True,
@@ -4093,7 +4075,7 @@ import numpy as np
             """
             To help visualize the floating pieces that were removed
 
-            nviz.plot_objects(mesh_removed_glia,
+            ipvu.plot_objects(mesh_removed_glia,
                           meshes=floating_insig_pieces,
                          meshes_colors="red")
 
@@ -4220,7 +4202,7 @@ def find_large_dense_submesh(mesh,
             """
             To help visualize the floating pieces that were removed
 
-            nviz.plot_objects(mesh_removed_glia,
+            ipvu.plot_objects(mesh_removed_glia,
                           meshes=floating_insig_pieces,
                          meshes_colors="red")
 
@@ -4246,7 +4228,6 @@ def empty_mesh():
                           faces=np.array([]))
     
     
-import time
         
 def percentage_vertices_inside(
                                 main_mesh,
@@ -4571,7 +4552,6 @@ def is_mesh(obj):
     else:
         return False
 
-import logging
 def turn_off_logging():
     logging.getLogger("trimesh").setLevel(logging.ERROR)
 
@@ -4627,7 +4607,6 @@ def sphere_mesh(center,radius=100):
 def kdtree_length(kdtree_obj):
     return len(kdtree_obj.data_pts)
 
-import neuron_visualizations as nviz
 def largest_border_to_coordinate(
     mesh,
     coordinate,
@@ -4664,7 +4643,7 @@ def largest_border_to_coordinate(
             print(f"# of border_vertex_groups = {len(border_vertex_groups)}")
 
         if plot_border_vertices:
-            nviz.plot_objects(mesh,
+            ipvu.plot_objects(mesh,
                              scatters=[np.array(k).reshape(-1,3) for k in border_vertex_groups],
                              scatters_colors="red")
 
@@ -4689,7 +4668,7 @@ def largest_border_to_coordinate(
             winning_border = border_vertex_groups[np.argmin(border_distances)]
 
         if plot_winning_border:
-            nviz.plot_objects(mesh,
+            ipvu.plot_objects(mesh,
                              scatters=[winning_border,coordinate],
                              scatters_colors=["red","green"],
                              scatter_size=0.3)
@@ -4798,7 +4777,6 @@ def closest_mesh_to_coordinate(mesh_list,coordinate,
 
 
     
-import skeleton_utils as sk
 
 def bbox_volume_oriented(mesh):
     return mesh.bounding_box_oriented.volume
@@ -5007,7 +4985,7 @@ def plot_segmentation(meshes,cgal_info,
     print(f"Segmentation Info:")
     for j,(m,c) in enumerate(zip(meshes,cgal_info)):
         print(f"Mesh {j}: {m} ({c})")
-    nviz.plot_objects(meshes=meshes,
+    ipvu.plot_objects(meshes=meshes,
                      meshes_colors="random",
                      mesh_alpha=mesh_alpha)
     
@@ -5029,7 +5007,7 @@ def closest_split_to_coordinate(mesh,
                            )
     if plot_split:
         print(f"Mesh Split with significance_threshold = {significance_threshold}")
-        nviz.plot_objects(meshes=sig_pieces,
+        ipvu.plot_objects(meshes=sig_pieces,
                          meshes_colors="random",
                          mesh_alpha=1)
     
@@ -5044,7 +5022,7 @@ def closest_split_to_coordinate(mesh,
         print(f"Winning Mesh idx = {closest_mesh_idx}, mesh = {potential_webbing_mesh}")
 
     if plot_closest_mesh:
-        nviz.plot_objects(main_mesh=potential_webbing_mesh,
+        ipvu.plot_objects(main_mesh=potential_webbing_mesh,
                       main_mesh_alpha=1,
                         meshes=non_webbing_meshes,
                      meshes_colors="red",
@@ -5097,7 +5075,7 @@ def closest_segmentation_to_coordinate(mesh,
     #find the mesh that is closest to the connecting point
 
     if plot_closest_mesh:
-        nviz.plot_objects(main_mesh=web_mesh,
+        ipvu.plot_objects(main_mesh=web_mesh,
                           main_mesh_alpha=1,
                             meshes=webless_meshes,
                          meshes_colors="red",
@@ -5174,7 +5152,6 @@ def restrict_mesh_list_by_mesh(mesh_list,
     
     
     
-from pykdtree.kdtree import KDTree
 def min_cut_to_partition_mesh_vertices(mesh,
                                       source_coordinates,
                                       sink_coordinates,
@@ -5230,7 +5207,7 @@ def min_cut_to_partition_mesh_vertices(mesh,
         source_color = "aqua"
         print(f"Source = {source_color}, Sink = {sink_color}")
         colors = [sink_color,source_color]
-        nviz.plot_objects(main_mesh=mesh,
+        ipvu.plot_objects(main_mesh=mesh,
                          scatters=[sink_vertices,source_vertices],
                          scatters_colors=colors)
 
@@ -5257,7 +5234,7 @@ def min_cut_to_partition_mesh_vertices(mesh,
         print(f"# 0f cut points = {len(return_value)}")
         
     if plot_cut_vertices:
-        nviz.plot_objects(mesh,
+        ipvu.plot_objects(mesh,
                           scatters=[return_value],
                           scatters_colors="red")
         
@@ -5391,7 +5368,6 @@ default_percentage = 70
 def surface_area(mesh):
     return mesh.area
 
-import general_utils as gu
 def default_mesh_stats_to_run(ray_trace_perc_options = (30,50,70,90,95),
                              interpercentile_options = (30,50,70,90,95),
                              center_to_width_ratio_options = (30,50,70,90,95)):
@@ -5555,7 +5531,6 @@ def face_midpoints_x_z(mesh):
     return mesh.triangles_center[:,[0,2]]
 
 
-import dimensionality_reduction_utils as dru
 def ipr_largest_eigenvector_xy(mesh,
                               percentage = default_percentage,
                               verbose = False):
@@ -5664,7 +5639,7 @@ def faces_closer_than_distance_of_coordinates(
     return_mesh=True
     )
 
-    nviz.plot_objects(rest_mesh)
+    ipvu.plot_objects(rest_mesh)
     """
     
 
@@ -5685,7 +5660,7 @@ def faces_closer_than_distance_of_coordinates(
         
     if plot:
         submesh = mesh.submesh([face_id],append=True)
-        nviz.plot_objects(
+        ipvu.plot_objects(
             mesh,
             meshes = [submesh],
             meshes_colors = ["red"],
@@ -5789,8 +5764,6 @@ def radius_sphere_from_volume(volume):
     return (volume*(3/(4*np.pi)))**(1/3)
 
 
-import numpy_utils as nu
-import networkx as nx
 def mesh_list_distance_connectivity(
     meshes,
     pairs_to_test=None,
@@ -6052,7 +6025,7 @@ def bbox_intersect_test(
     mesh2_bbox = tu.bounding_box(mesh_2)
 
     if plot:
-        nviz.plot_objects(
+        ipvu.plot_objects(
             meshes=meshes_to_plot + [mesh1_bbox,mesh2_bbox],
             meshes_colors=meshes_to_plot_colors + [mesh_1_bbox_color,mesh_2_bbox_color],
             mesh_alpha=meshes_alpha + [bbox_alpha]*2,
@@ -6084,8 +6057,10 @@ def farthest_coordinate_to_faces(
     farthest closest distance to a mesh
     
     Ex: 
+    import neurd
+    
     branch_obj = neuron_obj[0][0]
-    nviz.plot_branch_spines(branch_obj)
+    neurd.plot_branch_spines(branch_obj)
     farthest_coord = farthest_coordinate_to_faces(
         branch_obj.mesh,
         branch_obj.skeleton,
@@ -6093,7 +6068,7 @@ def farthest_coordinate_to_faces(
         verbose = True
     )
 
-    nviz.plot_objects(
+    ipvu.plot_objects(
     branch_obj.mesh,
         branch_obj.skeleton,
         scatters=[farthest_coord],
@@ -6115,7 +6090,7 @@ def farthest_coordinate_to_faces(
     if plot:
         farthest_color = "blue"
         print(f"Closest coordinate color = {farthest_color}")
-        nviz.plot_objects(
+        ipvu.plot_objects(
             mesh,
             scatters=[coordinates,farthest_coordinate],
             scatter_size=[0.2,2],
@@ -6176,7 +6151,7 @@ def closest_n_attributes_to_coordinate(
     closest_attrs = curr_attrs[closest_idx]
     
     if plot: 
-        nviz.plot_objects(
+        ipvu.plot_objects(
             mesh,
         scatters = [coordinate,closest_attrs],
         scatters_colors=["red","blue"],
@@ -6234,7 +6209,7 @@ def connected_components_from_mesh(
         meshes = return_value
     
     if plot:
-        nviz.plot_objects(
+        ipvu.plot_objects(
             meshes=meshes,
             meshes_colors = "random"
         )
@@ -6258,7 +6233,6 @@ def skeletal_length_from_mesh(mesh,plot=False):
 def width_ray(mesh,percentile=50):
     return width_ray_trace_perc(mesh,percentile=percentile)
 
-import numpy_utils as nu
 def overlapping_vertices_from_face_lists(
     mesh,
     face_lists,
@@ -6402,7 +6376,7 @@ def coordinate_on_mesh_mesh_border(
         print(f"coordinate = {coordinate}")
     
     if plot:
-        nviz.plot_objects(
+        ipvu.plot_objects(
             mesh_border_minus_meshes,
             meshes = [mesh],
             meshes_colors = ["red"],
@@ -6481,7 +6455,7 @@ def filter_away_connected_comp_in_face_idx_with_minimum_vertex_distance_to_coord
                 filtered_away_meshes.append(c_mesh)
                     
     if plot:
-        nviz.plot_objects(
+        ipvu.plot_objects(
             meshes = final_comp_meshes + filtered_away_meshes,
             meshes_colors = ["green"]*len(final_comp_meshes) + ["red"]*len(filtered_away_meshes)
         )
@@ -6569,7 +6543,7 @@ def connected_component_meshes(
     if verbose or plot:
         print(f"# of conn comp meshes = {len(return_meshes)}")
     if plot:
-        nviz.plot_objects(
+        ipvu.plot_objects(
             meshes = return_meshes,
             meshes_colors = "random",
         )
@@ -6587,7 +6561,7 @@ def closest_connected_component_mesh_to_coordinates(
         coordinates,
     )
     if plot:
-        nviz.plot_objects(closest_mesh,scatters=[coordinates])
+        ipvu.plot_objects(closest_mesh,scatters=[coordinates])
         
 def faces_defined_by_vertices_idx_list_to_mesh(
     mesh,
@@ -6611,14 +6585,12 @@ def faces_defined_by_vertices_idx_list_to_mesh(
     )
     
     if plot:
-        nviz.plot_objects(new_mesh)
+        ipvu.plot_objects(new_mesh)
     if verbose:
         print(f"new_mesh = {new_mesh}")
         
     return new_mesh
 
-from trimesh.path.exchange.misc import faces_to_path
-from trimesh import triangles
 
 def stitch(
     mesh,
@@ -6764,7 +6736,7 @@ def stitch(
             new_mesh = empty_mesh()
             
     if plot:
-        nviz.plot_objects(mesh,meshes = [new_mesh],meshes_colors = "red")
+        ipvu.plot_objects(mesh,meshes = [new_mesh],meshes_colors = "red")
         
     if return_mesh_with_holes_stitched:
         new_mesh = tu.combine_meshes([mesh,new_mesh])
@@ -6804,7 +6776,7 @@ def stitch_mesh_at_vertices(
         print(f"new mesh = {m}")
     
     if plot:
-        nviz.plot_objects(m,scatters=[vertices])
+        ipvu.plot_objects(m,scatters=[vertices])
         
     return m
 
@@ -6947,7 +6919,7 @@ def close_hole_area_top_k_extrema(
             print(f"{extrema} = {stitch_extrema}")
 
         if plot:
-            nviz.plot_objects(
+            ipvu.plot_objects(
                 mesh,
                 meshes = list(stitch_extrema_meshes),
                 meshes_colors = "red",
@@ -7015,8 +6987,6 @@ def close_hole_area_top_2_mean(
     else:
         return aggr_func(val)
 
-import pandas as pd
-import matplotlib.pyplot as plt
 def stats_df(
     meshes,
     functions,
@@ -7083,7 +7053,6 @@ def stats_df(
             plt.show()
     return df
 
-import pandas_utils as pu
 def query_meshes_from_restrictions(
     meshes,
     query,
@@ -7120,7 +7089,7 @@ def query_meshes_from_restrictions(
     return_meshes = [meshes[i] for i in idx]
     
     if plot:
-        nviz.plot_objects(
+        ipvu.plot_objects(
             tu.combine_meshes(meshes),
             meshes = return_meshes,
             meshes_colors = "red"
@@ -7132,4 +7101,23 @@ def query_meshes_from_restrictions(
         
 query_meshes_from_stats = query_meshes_from_restrictions
 restrict_meshes_from_stats = query_meshes_from_restrictions
-import trimesh_utils as tu
+
+
+#--- from mesh_tools ---
+from . import compartment_utils as cu
+from . import skeleton_utils as sk
+
+#--- from machine_learning_tools ---
+from machine_learning_tools import dimensionality_reduction_utils as dru
+
+#--- from python_tools ---
+from python_tools import general_utils as gu
+from python_tools import ipyvolume_utils as ipvu
+from python_tools import matplotlib_utils as mu
+from python_tools import networkx_utils as xu
+from python_tools import numpy_utils as nu
+from python_tools import pandas_utils as pu
+from python_tools import system_utils as su
+from python_tools.tqdm_utils import tqdm
+
+from . import trimesh_utils as tu

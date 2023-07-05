@@ -1,21 +1,23 @@
-from scipy import sparse, spatial
-import numpy as np
-import time
+
+from collections import defaultdict
+from copy import deepcopy
+import itertools
+from importlib import reload
+import logging
+from meshparty.skeleton import Skeleton
+from meshparty import trimesh_io
+from meshparty.trimesh_io import Mesh
 from meshparty import trimesh_vtk, utils, mesh_filters
+import networkx as nx
+import numpy as np
 import pandas as pd
 from pykdtree.kdtree import KDTree
-from tqdm_utils import tqdm
-from tqdm import trange 
-from meshparty.trimesh_io import Mesh
-from meshparty.skeleton import Skeleton
-from collections import defaultdict
 from pykdtree.kdtree import KDTree as pyKDTree
+from scipy import sparse, spatial
+import time
+from tqdm import trange 
 import trimesh.ray
 from trimesh.ray import ray_pyembree
-import logging
-
-
-
 
 
 # --------------------- Functions from skeleton.py ------------------- #
@@ -816,12 +818,6 @@ def ray_trace_distance(vertex_inds, mesh, max_iter=10, rand_jitter=0.001, verbos
 
 # ================= 10/12 added skeletonization for decomposition=================================== #
 
-from copy import deepcopy
-from importlib import reload
-import numpy as np
-import networkx as nx
-import time
-from meshparty import trimesh_io
 
 invalidation_d_default = 12000
 smooth_neighborhood_default = 1
@@ -881,13 +877,6 @@ def skeletonize_mesh_largest_component(mesh,
         return sk_meshparty_obj
 
 
-import time
-import skeleton_utils as sk
-import general_utils as gu
-import numpy as np
-import compartment_utils as cu
-import itertools
-import trimesh_utils as tu
 
 def skeleton_obj_to_branches(sk_meshparty_obj,
                              mesh,
@@ -1233,11 +1222,8 @@ def skeleton_obj_to_branches(sk_meshparty_obj,
     else:
         return sk.stack_skeletons(segment_branches_filtered)
     
-import time
 
 
-import skeleton_utils as sk
-import numpy_utils as nu
 
 def width_median_weighted(widths,
                           skeletons,
@@ -1318,7 +1304,6 @@ def branches_from_mesh(
 
 
 
-import neuron_visualizations as nviz
 def skeletonize(
     mesh,
     root = None,
@@ -1361,7 +1346,7 @@ def skeletonize(
     return_sk = sk.stack_skeletons(segment_branches)
     
     if plot_skeleton:
-        nviz.plot_objects(
+        ipvu.plot_objects(
             mesh,
             main_skeleton = return_sk
         )
@@ -1369,8 +1354,17 @@ def skeletonize(
     return return_sk
 
 
-import meshparty_skeletonize as m_sk
 
-    
-    
-    
+
+#--- from mesh_tools ---
+from . import compartment_utils as cu
+from . import skeleton_utils as sk
+from . import trimesh_utils as tu
+
+#--- from python_tools ---
+from python_tools import general_utils as gu
+from python_tools import ipyvolume_utils as ipvu
+from python_tools import numpy_utils as nu
+from python_tools.tqdm_utils import tqdm
+
+from . import meshparty_skeletonize as m_sk
