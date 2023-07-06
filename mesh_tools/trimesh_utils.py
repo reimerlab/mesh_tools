@@ -877,7 +877,7 @@ def split(mesh, only_watertight=False,
     
     #control if the meshes is iterable or not
     try:
-        ordered_comp_indices = np.array([k.astype("int") for k in ordered_components])
+        ordered_comp_indices = np.array([k.astype("int") for k in ordered_components],,dtype='object')
     except:
         from python_tools import system_utils as su
         su.compressed_pickle(ordered_components,"ordered_components")
@@ -3577,12 +3577,12 @@ def components_to_submeshes(mesh,components,return_components=True,only_watertig
     
     #control if the meshes is iterable or not
     try:
-        ordered_comp_indices = np.array([k.astype("int") for k in ordered_components])
+        ordered_comp_indices = np.array([k.astype("int") for k in ordered_components],dtype='object')
     except:
         from python_tools import system_utils as su
         su.compressed_pickle(ordered_components,"ordered_components")
         print(f"ordered_components = {ordered_components}")
-        raise Exception("ordered_components")
+        raise Exception("ordered_components hi")
     
     if return_components:
         return ordered_meshes,ordered_comp_indices
