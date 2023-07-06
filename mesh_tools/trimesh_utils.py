@@ -6480,7 +6480,7 @@ def closest_mesh_attribute_to_coordinates_fast(
     coordinates =np.array(coordinates).reshape(-1,3)
     if "vertic" in attribute:
         attr = mesh.vertices
-    if "face" is attribute:
+    if "face" in attribute:
         attr = mesh.triangles_center
     else:
         attr = getattr(mesh,attribute)
