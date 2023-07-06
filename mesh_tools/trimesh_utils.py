@@ -877,7 +877,7 @@ def split(mesh, only_watertight=False,
     
     #control if the meshes is iterable or not
     try:
-        ordered_comp_indices = np.array([k.astype("int") for k in ordered_components],,dtype='object')
+        ordered_comp_indices = np.array([k.astype("int") for k in ordered_components],dtype='object')
     except:
         from python_tools import system_utils as su
         su.compressed_pickle(ordered_components,"ordered_components")
