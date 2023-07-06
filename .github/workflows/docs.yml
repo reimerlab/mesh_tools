@@ -12,15 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install Python
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.8
+      # - name: Install Python
+      #   uses: actions/setup-python@v1
+      #   with:
+      #     python-version: 3.8
 
-      - name: Upgrade pip
-        run: |
-          # install pip=>20.1 to use "pip cache dir"
-          python3 -m pip install --upgrade pip
+      # - name: Upgrade pip
+      #   run: |
+      #     # install pip=>20.1 to use "pip cache dir"
+      #     python3 -m pip install --upgrade pip
 
       # - name: Get pip cache dir
       #   id: pip-cache
