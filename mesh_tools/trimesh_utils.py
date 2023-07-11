@@ -867,7 +867,8 @@ def split(mesh, only_watertight=False,
     
     
     ordered_meshes = np.array([meshes[i] for i in ordered_indices])
-    ordered_components = np.array([components[i] for i in ordered_indices],dtype="object")
+    ordered_components = np.array([components[i] for i in ordered_indices])#,dtype="object")
+    
     
     if len(ordered_meshes)>=2:
         if (len(ordered_meshes[0].faces) < len(ordered_meshes[1].faces)) and (len(ordered_meshes[0].vertices) < len(ordered_meshes[1].vertices)) :
@@ -882,12 +883,13 @@ def split(mesh, only_watertight=False,
     
     #control if the meshes is iterable or not
     try:
-        ordered_comp_indices = np.array([k.astype("int") for k in ordered_components],dtype='object')
+        ordered_comp_indices = np.array([k.astype("int") for k in ordered_components])
     except:
-        from python_tools import system_utils as su
-        su.compressed_pickle(ordered_components,"ordered_components")
-        print(f"ordered_components = {ordered_components}")
-        raise Exception("ordered_components")
+        pass
+        # from python_tools import system_utils as su
+        # su.compressed_pickle(ordered_components,"ordered_components")
+        # print(f"ordered_components = {ordered_components}")
+        # raise Exception("ordered_components")
     
     if return_mesh_list:
         if type(ordered_meshes) != type(np.array([])) and type(ordered_meshes) != list:
@@ -1772,7 +1774,11 @@ def split_mesh_into_face_groups(
     
     if not return_dict:
         total_submeshes = np.array(list(total_submeshes.values()))
-        total_submeshes_idx =np.array(list(total_submeshes_idx.values()))
+        
+        try:
+            total_submeshes_idx =np.array(list(total_submeshes_idx.values()))
+        except:
+            total_submeshes_idx =np.array(list(total_submeshes_idx.values()),dtype='object')
         
     if plot:
         total_submeshes = np.array(list(total_submeshes.values()))
@@ -3578,12 +3584,9 @@ def components_to_submeshes(mesh,components,return_components=True,only_watertig
     
     #control if the meshes is iterable or not
     try:
-        ordered_comp_indices = np.array([k.astype("int") for k in ordered_components],dtype='object')
+        ordered_comp_indices = np.array([k.astype("int") for k in ordered_components],)
     except:
-        from python_tools import system_utils as su
-        su.compressed_pickle(ordered_components,"ordered_components")
-        print(f"ordered_components = {ordered_components}")
-        raise Exception("ordered_components hi")
+        pass
     
     if return_components:
         return ordered_meshes,ordered_comp_indices
@@ -3620,6 +3623,8 @@ def split_by_vertices(
     if return_face_idx_map:
         return_components = True
         ordered_comp_indices = tu.face_idx_map_from_face_idx_list(ordered_comp_indices,mesh=mesh,)
+        
+    #print(f"inside vertices split, ordered_comp_indices = {ordered_comp_indices[0].dtype}")
     
     if return_components:
         return ordered_meshes,ordered_comp_indices
