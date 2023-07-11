@@ -46,17 +46,7 @@
 <li class="toctree-l1 current"><a class="reference internal" href="modules.html">mesh_tools</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">mesh_tools package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#module-mesh_tools.compartment_utils">mesh_tools.compartment_utils module</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#mesh_tools.compartment_utils.filter_face_coloring_to_connected_components"><code class="docutils literal notranslate"><span class="pre">filter_face_coloring_to_connected_components()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mesh_tools.compartment_utils.get_skeletal_distance"><code class="docutils literal notranslate"><span class="pre">get_skeletal_distance()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mesh_tools.compartment_utils.get_skeletal_distance_no_skipping"><code class="docutils literal notranslate"><span class="pre">get_skeletal_distance_no_skipping()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mesh_tools.compartment_utils.groups_of_labels_to_resolved_labels"><code class="docutils literal notranslate"><span class="pre">groups_of_labels_to_resolved_labels()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mesh_tools.compartment_utils.mesh_correspondence_adaptive_distance"><code class="docutils literal notranslate"><span class="pre">mesh_correspondence_adaptive_distance()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mesh_tools.compartment_utils.resolve_empty_conflicting_face_labels"><code class="docutils literal notranslate"><span class="pre">resolve_empty_conflicting_face_labels()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mesh_tools.compartment_utils.waterfill_labeling"><code class="docutils literal notranslate"><span class="pre">waterfill_labeling()</span></code></a></li>
-<li class="toctree-l4"><a class="reference internal" href="#mesh_tools.compartment_utils.waterfill_starting_label_to_soma_border"><code class="docutils literal notranslate"><span class="pre">waterfill_starting_label_to_soma_border()</span></code></a></li>
-</ul>
-</li>
+<li class="toctree-l3"><a class="reference internal" href="#mesh-tools-compartment-utils-module">mesh_tools.compartment_utils module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-mesh_tools.meshlab">mesh_tools.meshlab module</a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#mesh_tools.meshlab.Decimator"><code class="docutils literal notranslate"><span class="pre">Decimator</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mesh_tools.meshlab.FillHoles"><code class="docutils literal notranslate"><span class="pre">FillHoles</span></code></a></li>
@@ -494,110 +484,8 @@
 <section id="submodules">
 <h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading"></a></h2>
 </section>
-<section id="module-mesh_tools.compartment_utils">
-<span id="mesh-tools-compartment-utils-module"></span><h2>mesh_tools.compartment_utils module<a class="headerlink" href="#module-mesh_tools.compartment_utils" title="Permalink to this heading"></a></h2>
-<dl class="py function">
-<dt class="sig sig-object py" id="mesh_tools.compartment_utils.filter_face_coloring_to_connected_components">
-<span class="sig-prename descclassname"><span class="pre">mesh_tools.compartment_utils.</span></span><span class="sig-name descname"><span class="pre">filter_face_coloring_to_connected_components</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curr_limb_mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">face_coloring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vertices'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">must_keep_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mesh_tools/compartment_utils.html#filter_face_coloring_to_connected_components"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mesh_tools.compartment_utils.filter_face_coloring_to_connected_components" title="Permalink to this definition"></a></dt>
-<dd><p>Purpose: To eliminate all but the largest connected component
-of a label on the mesh face coloring</p>
-<p>Reason for need: when cancelling out conflict pieces
-it can split up a mesh into disconnected components and we
-want only one component so that it can later be expanded during
-the waterfilling process</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mesh_tools.compartment_utils.get_skeletal_distance">
-<span class="sig-prename descclassname"><span class="pre">mesh_tools.compartment_utils.</span></span><span class="sig-name descname"><span class="pre">get_skeletal_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">main_mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_by_mesh_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_loop_print</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stitch_patches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'edges'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast_mesh_split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">significant_sub_components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mesh_tools/compartment_utils.html#get_skeletal_distance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mesh_tools.compartment_utils.get_skeletal_distance" title="Permalink to this definition"></a></dt>
-<dd><p>Purpose: To return the histogram of distances along a mesh subtraction process
-so that we could evenutally find an adaptive distance threshold</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mesh_tools.compartment_utils.get_skeletal_distance_no_skipping">
-<span class="sig-prename descclassname"><span class="pre">mesh_tools.compartment_utils.</span></span><span class="sig-name descname"><span class="pre">get_skeletal_distance_no_skipping</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">main_mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edges</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.01</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_by_mesh_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">edge_loop_print</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stitch_patches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">significant_sub_components</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'edges'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fast_mesh_split</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mesh_tools/compartment_utils.html#get_skeletal_distance_no_skipping"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mesh_tools.compartment_utils.get_skeletal_distance_no_skipping" title="Permalink to this definition"></a></dt>
-<dd><p>Purpose: To return the histogram of distances along a mesh subtraction process
-so that we could evenutally find an adaptive distance threshold</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mesh_tools.compartment_utils.groups_of_labels_to_resolved_labels">
-<span class="sig-prename descclassname"><span class="pre">mesh_tools.compartment_utils.</span></span><span class="sig-name descname"><span class="pre">groups_of_labels_to_resolved_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">current_mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">face_correspondence_lists</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mesh_tools/compartment_utils.html#groups_of_labels_to_resolved_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mesh_tools.compartment_utils.groups_of_labels_to_resolved_labels" title="Permalink to this definition"></a></dt>
-<dd><p>Purpose: To take a list of face correspondences of different parts
-and turn them into an array mapping every face (on the mesh) to a label</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mesh_tools.compartment_utils.mesh_correspondence_adaptive_distance">
-<span class="sig-prename descclassname"><span class="pre">mesh_tools.compartment_utils.</span></span><span class="sig-name descname"><span class="pre">mesh_correspondence_adaptive_distance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curr_branch_skeleton</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">curr_branch_mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skeleton_segment_width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_by_mesh_center</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_mesh_perc_drop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stitch_patches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">buffer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">100</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distance_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_closest_face_on_empty</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vertices'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mesh_tools/compartment_utils.html#mesh_correspondence_adaptive_distance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mesh_tools.compartment_utils.mesh_correspondence_adaptive_distance" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mesh_tools.compartment_utils.resolve_empty_conflicting_face_labels">
-<span class="sig-prename descclassname"><span class="pre">mesh_tools.compartment_utils.</span></span><span class="sig-name descname"><span class="pre">resolve_empty_conflicting_face_labels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curr_limb_mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">face_lookup</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_missing_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_submesh_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_color_filling_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">must_keep_labels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">{}</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vertices'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branch_skeletons</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mesh_tools/compartment_utils.html#resolve_empty_conflicting_face_labels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mesh_tools.compartment_utils.resolve_empty_conflicting_face_labels" title="Permalink to this definition"></a></dt>
-<dd><p>Input:
-- full mesh
-- current face coloring of mesh (could be incomplete) corresponding to skeletal pieces
-(but doesn’t need the skeletal pieces to do it’s jobs, those are just represented in the labels)</p>
-<p>Output:
-- better face coloring which has labels that:</p>
-<blockquote>
-<div><ol class="loweralpha simple">
-<li><p>cover entire mesh</p></li>
-<li><p>the labels exist as only 1 connected component on the mesh</p></li>
-</ol>
-</div></blockquote>
-<p>Pseudocode of what doing:
-- clearing out the branch_mesh correspondence stored in limb_correspondence[limb_idx][k][“branch_mesh”]
-- gets a list of how many subdivided branches there were (becuase this should be the number of labels) and the mesh of whole limb
-- Builds a face to skeleeton branch correspondence bassed on the current  branch_piece[“correspondence_face_idx”] that already exists</p>
-<blockquote>
-<div><p>This may have overlaps or faces mapped to zero branches that we need to resolve</p>
-</div></blockquote>
-<ul class="simple">
-<li><p>computes the percentage of empty and conflicting faces</p></li>
-<li><p>makes sure that at least one face that corresponds to each branch piece (and throws error if so)</p></li>
-</ul>
-<p>#Doing the resolution of the empty and conflicting faces:
-- clears out all conflicting faces and leaves them just like the empty ones
-- uses the filter_face_coloring_to_connected_components which only keeps the largest connected component of a label</p>
-<blockquote>
-<div><p>(because the zeroing out of conflicting labels could have eliminated or split up some of the labels)</p>
-</div></blockquote>
-<ul class="simple">
-<li><p>if  a face was totally eliminated then add it back to the face coloring</p></li>
-</ul>
-<p>(only does this once so a face could still be missing if one face totally overwrites another face)</p>
-<p><a href="#id1"><span class="problematic" id="id2">**</span></a>At this point: there is at one-to-one correspondence of mesh face to skeletal piece label OR empty label (-1)</p>
-<p># Using the waterfilling algorithm: designed at fixing the correspondence to empty label (-1)
-- get a submesh of the original mesh but only for those empty faces and divide into disconnecteed mesh pieces
-- run through waterfilling algorithm to color each empty piece
-- check that there are no more empty faces
-- gets the one connected mesh component that corresponds to that label (get both the actual mesh and the mesh indexes)</p>
-<p>#the output of all of the algorithm:
-- save the result back in  limb_correspondence[limb_idx][k][“branch_mesh”] so it is accurately updated</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mesh_tools.compartment_utils.waterfill_labeling">
-<span class="sig-prename descclassname"><span class="pre">mesh_tools.compartment_utils.</span></span><span class="sig-name descname"><span class="pre">waterfill_labeling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">total_mesh_correspondence</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submesh_indices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_mesh</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_mesh_graph</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">propagation_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'random'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iterations</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_submesh_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1000</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vertices'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mesh_tools/compartment_utils.html#waterfill_labeling"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mesh_tools.compartment_utils.waterfill_labeling" title="Permalink to this definition"></a></dt>
-<dd><p>Pseudocode:
-1) check if the submesh you are propagating labels to is too large
-2) for each unmarked face get the neighbors of all of the faces, and for all these neighbors get all the labels
-3) if the neighbors label is not empty. depending on the type of progation type then pick the winning label
-a. random: just randomly choose from list
-b. …. not yet implemented
-4) revise the faces that are still empty and repeat process until all faces are empty (have a max iterations number)</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="mesh_tools.compartment_utils.waterfill_starting_label_to_soma_border">
-<span class="sig-prename descclassname"><span class="pre">mesh_tools.compartment_utils.</span></span><span class="sig-name descname"><span class="pre">waterfill_starting_label_to_soma_border</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">curr_branch_mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">border_vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">label_to_expand</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_face_labels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n_touching_soma_threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectivity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'vertices'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mesh_tools/compartment_utils.html#waterfill_starting_label_to_soma_border"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mesh_tools.compartment_utils.waterfill_starting_label_to_soma_border" title="Permalink to this definition"></a></dt>
-<dd><p>Purpose: To expand a certain label so it is touching the soma
-border vertices</p>
-</dd></dl>
-
+<section id="mesh-tools-compartment-utils-module">
+<h2>mesh_tools.compartment_utils module<a class="headerlink" href="#mesh-tools-compartment-utils-module" title="Permalink to this heading"></a></h2>
 </section>
 <section id="module-mesh_tools.meshlab">
 <span id="mesh-tools-meshlab-module"></span><h2>mesh_tools.meshlab module<a class="headerlink" href="#module-mesh_tools.meshlab" title="Permalink to this heading"></a></h2>
@@ -606,7 +494,7 @@ border vertices</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mesh_tools.meshlab.</span></span><span class="sig-name descname"><span class="pre">Decimator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">decimation_ratio</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_folder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mesh_tools/meshlab.html#Decimator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mesh_tools.meshlab.Decimator" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mesh_tools.meshlab.Meshlab" title="mesh_tools.meshlab.Meshlab"><code class="xref py py-class docutils literal notranslate"><span class="pre">Meshlab</span></code></a></p>
 <dl>
-<dt>Use like so:</dt><dd><p><a href="#id3"><span class="problematic" id="id4">``</span></a><a href="#id5"><span class="problematic" id="id6">`</span></a>python
+<dt>Use like so:</dt><dd><p><a href="#id1"><span class="problematic" id="id2">``</span></a><a href="#id3"><span class="problematic" id="id4">`</span></a>python
 # Preprocessing
 temp_folder = ‘decimation_temp’
 mls_func = Decimator(0.05, temp_folder, overwrite=True)</p>
@@ -671,7 +559,7 @@ return_mesh=False)</p>
 <p>Base Class that can be extended to implement different
 meshlabserver filters</p>
 <dl>
-<dt>Use like so:</dt><dd><p><a href="#id7"><span class="problematic" id="id8">``</span></a><a href="#id9"><span class="problematic" id="id10">`</span></a>python
+<dt>Use like so:</dt><dd><p><a href="#id5"><span class="problematic" id="id6">``</span></a><a href="#id7"><span class="problematic" id="id8">`</span></a>python
 # Preprocessing
 temp_folder = ‘decimation_temp’
 mls_func = Decimator(0.05, temp_folder, overwrite=True)</p>
@@ -755,7 +643,7 @@ return_mesh=True)</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">mesh_tools.meshlab.</span></span><span class="sig-name descname"><span class="pre">Poisson</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">temp_folder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'./temp'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mesh_tools/meshlab.html#Poisson"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mesh_tools.meshlab.Poisson" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <a class="reference internal" href="#mesh_tools.meshlab.Meshlab" title="mesh_tools.meshlab.Meshlab"><code class="xref py py-class docutils literal notranslate"><span class="pre">Meshlab</span></code></a></p>
 <dl>
-<dt>Use like so:</dt><dd><p><a href="#id11"><span class="problematic" id="id12">``</span></a><a href="#id13"><span class="problematic" id="id14">`</span></a>python
+<dt>Use like so:</dt><dd><p><a href="#id9"><span class="problematic" id="id10">``</span></a><a href="#id11"><span class="problematic" id="id12">`</span></a>python
 # Preprocessing
 temp_folder = ‘decimation_temp’
 mls_func = Decimator(0.05, temp_folder, overwrite=True)</p>
@@ -1570,7 +1458,7 @@ Pseudocode:
 a. for each non-dominant node, replace every occurance of the non-dominant one with the dominant one in indices
 - add the non-dominant ones to a list to delete</p>
 <p>** this will result in an indices that doesn’t have any of the repeat nodes, but the repeat nodes are still
-taking up the numbers that they were originally in order with <a href="#id15"><span class="problematic" id="id16">**</span></a><a href="#id17"><span class="problematic" id="id18">*</span></a></p>
+taking up the numbers that they were originally in order with <a href="#id13"><span class="problematic" id="id14">**</span></a><a href="#id15"><span class="problematic" id="id16">*</span></a></p>
 <p>np.delete(x,[1,3],axis=0)) # to delete the rows</p>
 <ol class="arabic simple" start="5">
 <li><p>remap the indices and delete the unique rows that were not used</p></li>
@@ -2380,7 +2268,7 @@ which keeps that distance or subtracts it (and does not resize or reorder the sk
 <p>Ex:
 restrict_skeleton_from_start(skeleton = base_skeleton_ordered,
 cutoff_distance = offset)</p>
-<p><a href="#id19"><span class="problematic" id="id20">**</span></a>** warning only works if skeletal segment <strong>*</strong></p>
+<p><a href="#id17"><span class="problematic" id="id18">**</span></a>** warning only works if skeletal segment <strong>*</strong></p>
 </dd></dl>
 
 <dl class="py function">
@@ -4507,7 +4395,7 @@ single triangle or quad holes.
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
 <dd class="field-odd"><p><ul class="simple">
 <li><p><strong>meshes</strong> (<em>(m,) trimesh.Trimesh</em>) – Results of splitting</p></li>
-<li><p><em>—————-****</em> THIS VERSION HAS BEEN ALTERED TO PASS BACK THE COMPONENTS INDICES TOO <a href="#id21"><span class="problematic" id="id22">**</span></a><a href="#id23"><span class="problematic" id="id24">**</span></a>——————*</p></li>
+<li><p><em>—————-****</em> THIS VERSION HAS BEEN ALTERED TO PASS BACK THE COMPONENTS INDICES TOO <a href="#id19"><span class="problematic" id="id20">**</span></a><a href="#id21"><span class="problematic" id="id22">**</span></a>——————*</p></li>
 <li><p><em>if return_components=True then will return an array of arrays that contain face indexes for all the submeshes split off</em></p></li>
 <li><p><em>Ex</em></p></li>
 <li><p><em>tu.split(elephant_and_box)</em></p></li>
@@ -4707,7 +4595,7 @@ mesh lists (and possibly return the number of vertices that are connecting them)
 2) Create a connectivity pairing to test
 3) Run the mesh connectivity to get the correct pairings and the weights
 4) Return the edges with the weights optionally attached</p>
-<p><a href="#id25"><span class="problematic" id="id26">**</span></a>stacked meshes could be faces indices or meshes themselves</p>
+<p><a href="#id23"><span class="problematic" id="id24">**</span></a>stacked meshes could be faces indices or meshes themselves</p>
 </dd></dl>
 
 <dl class="py function">
