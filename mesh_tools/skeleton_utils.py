@@ -13,7 +13,7 @@ import itertools
 import matplotlib.pyplot as plt
 import meshparty
 import networkx as nx
-import numpy as np
+from python_tools import numpy_dep as np
 import os
 import pathlib
 from pathlib import Path
@@ -6937,7 +6937,7 @@ def coordinates_along_skeleton_offset_from_start(
     
     Ex: 
     from mesh_tools import skeleton_utils as sk
-    import numpy as np
+    from python_tools import numpy_dep as np
 
 
     skeleton = neuron_obj[0][42].skeleton

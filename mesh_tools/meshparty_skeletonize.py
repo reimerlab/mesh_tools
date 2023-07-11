@@ -9,7 +9,7 @@ from meshparty import trimesh_io
 from meshparty.trimesh_io import Mesh
 from meshparty import trimesh_vtk, utils, mesh_filters
 import networkx as nx
-import numpy as np
+from python_tools import numpy_dep as np
 import pandas as pd
 from pykdtree.kdtree import KDTree
 from pykdtree.kdtree import KDTree as pyKDTree

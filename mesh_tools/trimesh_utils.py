@@ -12,7 +12,7 @@ import itertools
 import logging
 import matplotlib.pyplot as plt
 import networkx as nx
-import numpy as np
+from python_tools import numpy_dep as np
 import numpy as  np
 import open3d as o3d
 import pandas as pd
@@ -867,7 +867,7 @@ def split(mesh, only_watertight=False,
     
     
     ordered_meshes = np.array([meshes[i] for i in ordered_indices])
-    ordered_components = np.array([components[i] for i in ordered_indices])#,dtype="object")
+    ordered_components = np.array([components[i] for i in ordered_indices])
     
     
     if len(ordered_meshes)>=2:
@@ -1774,11 +1774,7 @@ def split_mesh_into_face_groups(
     
     if not return_dict:
         total_submeshes = np.array(list(total_submeshes.values()))
-        
-        try:
-            total_submeshes_idx =np.array(list(total_submeshes_idx.values()))
-        except:
-            total_submeshes_idx =np.array(list(total_submeshes_idx.values()),dtype='object')
+        total_submeshes_idx =np.array(list(total_submeshes_idx.values()))
         
     if plot:
         total_submeshes = np.array(list(total_submeshes.values()))
@@ -2622,7 +2618,7 @@ def filter_meshes_by_containing_coordinates(mesh_list,nullifying_points,
     
     Ex: 
     import trimesh
-    import numpy as np
+    from python_tools import numpy_dep as np
     tu = reload(tu)
 
     curr_limb = recovered_neuron[2]
@@ -3569,7 +3565,7 @@ def components_to_submeshes(mesh,components,return_components=True,only_watertig
     
     
     ordered_meshes = np.array([meshes[i] for i in ordered_indices])
-    ordered_components = np.array([components[i] for i in ordered_indices],dtype="object")
+    ordered_components = np.array([components[i] for i in ordered_indices])
     
     if len(ordered_meshes)>=2:
         if (len(ordered_meshes[0].faces) < len(ordered_meshes[1].faces)) and (len(ordered_meshes[0].vertices) < len(ordered_meshes[1].vertices)) :
