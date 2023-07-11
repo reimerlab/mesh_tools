@@ -95,6 +95,11 @@
 <span class="kn">from</span> <span class="nn">trimesh.path.exchange.misc</span> <span class="kn">import</span> <span class="n">faces_to_path</span>
 <span class="kn">from</span> <span class="nn">trimesh</span> <span class="kn">import</span> <span class="n">triangles</span>
 
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">cgal_Segmentation_Module</span> <span class="k">as</span> <span class="nn">csm</span>
+<span class="k">except</span><span class="p">:</span>
+    <span class="k">pass</span>
+
 
 <span class="c1">#loading a mesh safely without any processing to mess up the vertices/faces</span>
 <div class="viewcode-block" id="load_mesh_no_processing"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.trimesh_utils.load_mesh_no_processing">[docs]</a><span class="k">def</span> <span class="nf">load_mesh_no_processing</span><span class="p">(</span><span class="n">current_mesh_file</span><span class="p">):</span>
@@ -2889,10 +2894,6 @@
 
 
 
-<span class="k">try</span><span class="p">:</span>
-    <span class="kn">import</span> <span class="nn">cgal_Segmentation_Module</span> <span class="k">as</span> <span class="nn">csm</span>
-<span class="k">except</span><span class="p">:</span>
-    <span class="k">pass</span>
 
 <div class="viewcode-block" id="mesh_segmentation_largest_conn_comp"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.trimesh_utils.mesh_segmentation_largest_conn_comp">[docs]</a><span class="k">def</span> <span class="nf">mesh_segmentation_largest_conn_comp</span><span class="p">(</span>
         <span class="n">mesh</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
