@@ -3915,7 +3915,7 @@ def mesh_segmentation_from_skeleton(
     3) Refines the correspondence so only 1 skeletal
     branch matched to each face
     """
-    from meshAfterParty from neurd import preprocessing_vp2 as pre
+    from neurd import preprocessing_vp2 as pre
 
     local_correspondence = pre.mesh_correspondence_first_pass(
         mesh,

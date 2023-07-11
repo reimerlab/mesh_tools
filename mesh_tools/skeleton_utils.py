@@ -6327,7 +6327,7 @@ def skeleton_path_between_skeleton_coordinates(starting_coordinate,
             output.append(curr_skeleton)
 
             if plot_skeleton_path:
-                from meshAfterParty from neurd import neuron_visualizations as nviz
+                 import neuron_visualizations as nviz
                 ipvu.plot_objects(main_skeleton=skeleton,
                                  skeletons=[curr_skeleton],
                                  skeletons_colors="red",
@@ -7111,7 +7111,7 @@ def mesh_subtraction_by_skeleton(
         return_one=True,
     )
 
-    from meshAfterParty from neurd import neuron_visualizations as nviz
+    from neurd import neuron_visualizations as nviz
     nviz.visualize_neuron(neuron_obj,limb_branch_dict="all")
 
 
