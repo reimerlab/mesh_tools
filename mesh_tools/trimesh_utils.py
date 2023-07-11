@@ -12,8 +12,9 @@ import itertools
 import logging
 import matplotlib.pyplot as plt
 import networkx as nx
+from trimesh.grouping import *
+from trimesh.graph import *
 from python_tools import numpy_dep as np
-import numpy as  np
 import open3d as o3d
 import pandas as pd
 from pathlib import Path
@@ -620,6 +621,7 @@ def face_idx_map_from_face_idx_list(
         
     return face_map_idx
 
+
 def split_significant_pieces(new_submesh,
                             significance_threshold=100,
                             print_flag=False,
@@ -640,6 +642,8 @@ def split_significant_pieces(new_submesh,
     
     
     """
+
+    
     
     if type(new_submesh) != type(trimesh.Trimesh()):
         print("Inside split_significant_pieces and was passed empty mesh so retruning empty list")
@@ -769,7 +773,7 @@ def sort_meshes_largest_to_smallest(meshes,
         return sorted_meshes
     
     
-from trimesh.graph import *
+
 def split(mesh, only_watertight=False,
           adjacency=None,
           engine=None, 
@@ -834,6 +838,7 @@ def split(mesh, only_watertight=False,
         nodes=np.arange(len(mesh.faces)),
         min_len=min_len,
         engine=engine)
+              
     
     #print(f"components = {[c.shape for c in components]}")
     meshes = mesh.submesh(
@@ -864,6 +869,7 @@ def split(mesh, only_watertight=False,
     # order according to number of faces in meshes (SO DOESN'T ERROR ANYMORE)
     current_array = [len(c.faces) for c in meshes]
     ordered_indices = np.flip(np.argsort(current_array))
+              
     
     
     ordered_meshes = np.array([meshes[i] for i in ordered_indices])
@@ -2093,7 +2099,7 @@ def mesh_vertex_graph(mesh):
 
 # ------------ Algorithms used for checking the spines -------- #
 
-from trimesh.grouping import *
+
 def waterfilling_face_idx(mesh,
                       starting_face_idx,
                       n_iterations=10,
@@ -3564,6 +3570,7 @@ def components_to_submeshes(mesh,components,return_components=True,only_watertig
     ordered_indices = np.flip(np.argsort(current_array))
     
     
+    
     ordered_meshes = np.array([meshes[i] for i in ordered_indices])
     ordered_components = np.array([components[i] for i in ordered_indices])
     
@@ -3887,7 +3894,6 @@ def skeleton_to_mesh_correspondence(mesh,
         
     return return_value
 
-
 def mesh_segmentation_from_skeleton(
     mesh,
     skeleton,
@@ -3909,7 +3915,7 @@ def mesh_segmentation_from_skeleton(
     3) Refines the correspondence so only 1 skeletal
     branch matched to each face
     """
-    from meshAfterParty import preprocessing_vp2 as pre
+    from meshAfterParty from neurd import preprocessing_vp2 as pre
 
     local_correspondence = pre.mesh_correspondence_first_pass(
         mesh,
