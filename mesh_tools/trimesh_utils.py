@@ -24,6 +24,11 @@ import trimesh
 from trimesh.path.exchange.misc import faces_to_path
 from trimesh import triangles
 
+try:
+    import cgal_Segmentation_Module as csm
+except:
+    pass
+
 
 #loading a mesh safely without any processing to mess up the vertices/faces
 def load_mesh_no_processing(current_mesh_file):
@@ -2818,10 +2823,6 @@ def pymeshfix_clean(mesh,
 
 
 
-try:
-    import cgal_Segmentation_Module as csm
-except:
-    pass
 
 def mesh_segmentation_largest_conn_comp(
         mesh = None,
