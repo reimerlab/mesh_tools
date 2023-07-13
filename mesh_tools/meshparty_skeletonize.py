@@ -5,8 +5,12 @@ import itertools
 from importlib import reload
 import logging
 from meshparty.skeleton import Skeleton
-from meshparty import trimesh_io
-from meshparty.trimesh_io import Mesh
+try:
+    from meshparty import trimesh_io
+    from meshparty.trimesh_io import Mesh
+except:
+    pass
+
 from meshparty import trimesh_vtk, utils, mesh_filters
 import networkx as nx
 from python_tools import numpy_dep as np

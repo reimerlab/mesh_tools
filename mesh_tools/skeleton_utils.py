@@ -6327,7 +6327,6 @@ def skeleton_path_between_skeleton_coordinates(starting_coordinate,
             output.append(curr_skeleton)
 
             if plot_skeleton_path:
-                 import neuron_visualizations as nviz
                 ipvu.plot_objects(main_skeleton=skeleton,
                                  skeletons=[curr_skeleton],
                                  skeletons_colors="red",
