@@ -1,4 +1,4 @@
-FROM ubuntu:18.04 AS BASE
+FROM ubuntu:18.04 AS base
 LABEL mantainer="Brendan Celii <brendanacelii@gmail.com>"
 # Deal with pesky Python 3 encoding issue
 ENV LANG C.UTF-8
@@ -90,7 +90,7 @@ RUN jupyter nbextension enable --py --sys-prefix ipyvolume
     #&& jupyter labextension install @jupyter-widgets/jupyterlab-manager \ 
 
 #-------------------------------------------------------------
-FROM BASE AS MESH_LITE
+FROM base AS mesh_lite
 
 ADD ./python_bash_files/embree.bash /src/embree.bash
 
@@ -103,7 +103,7 @@ RUN apt-get update && apt-get install -q -y \
 
 
 #-------------------------------------------------------------
-FROM MESH_LITE AS MESH_HEAVY
+FROM mesh_lite AS mesh_heavy
 
 # --- cgal and meshlab dependencies----
 RUN apt-get update && apt-get install -q -y \
