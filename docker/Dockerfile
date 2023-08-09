@@ -72,8 +72,13 @@ RUN apt-get update &&\
 # RUN conda install -c conda-forge nodejs
 
 # Install essential Python packages
+RUN pip3 install setuptools=='59.6.0' \
+    && pip3 install --upgrade pip==21.3.1
+
+
 RUN python3 -m pip --no-cache-dir install \
-    jupyterlab \
+    notebook==6.5.4 \
+    jupyterlab==4.0.2 \
     jupyter_contrib_nbextensions \
     simplejson \
     jedi==0.17.2 \
@@ -82,15 +87,29 @@ RUN python3 -m pip --no-cache-dir install \
     jupyterlab_widgets \
     ipyvolume
 
-RUN jupyter nbextension enable --py --sys-prefix ipyvolume
+RUN jupyter nbextension enable --py --sys-prefix ipyvolume \
+    && jupyter nbextension enable --py --sys-prefix widgetsnbextension
 
     #&& jupyter labextension install ipyvolume \
     #&& jupyter nbextension enable --py widgetsnbextension \
     #&& jupyter labextension install jupyter-webrtc \
     #&& jupyter labextension install @jupyter-widgets/jupyterlab-manager \ 
 
+# -- installing datajoint and dotmotif (moved to the ) ====
+# WORKDIR /
+# RUN git clone https://github.com/aplbrain/grandiso-networkx.git \
+#     && git clone https://github.com/celiibrendan/dotmotif.git
+# ADD ./grandiso_patch_files/queues.py /grandiso-networkx/grandiso/queues.py
+# RUN pip3 install /grandiso-networkx/ --no-cache-dir \ 
+#     && pip3 install /dotmotif/ --no-cache-dir \
+#     && pip3 install git+https://github.com/spapa013/datajoint-python.git --no-cache-dir
+
+
 #-------------------------------------------------------------
 FROM base AS mesh_lite
+
+# RUN pip3 install numpy=='1.19.5' \
+#     && pip3 install cython=='0.29.21'
 
 ADD ./python_bash_files/embree.bash /src/embree.bash
 
@@ -172,9 +191,9 @@ ADD ./CGAL /src/CGAL
 
 # ---- for some reason this isnt installling correctly but doing from container works fine
 RUN \
-    pip3 install --root-user-action=ignore -e /src/CGAL/cgal_segmentation \
-    && pip3 install --root-user-action=ignore -e /src/CGAL/cgal_skeleton \ 
-    && pip3 install --root-user-action=ignore -e /src/CGAL/cgal_skeleton_param 
+    pip3 install -e /src/CGAL/cgal_segmentation \
+    && pip3 install -e /src/CGAL/cgal_skeleton \ 
+    && pip3 install -e /src/CGAL/cgal_skeleton_param 
 
 
 # FROM BASE AS TORCH_CPU
