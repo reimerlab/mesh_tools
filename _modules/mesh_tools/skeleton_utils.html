@@ -245,7 +245,33 @@
 
 <span class="n">convert_skeleton_to_coordinates</span> <span class="o">=</span> <span class="n">convert_skeleton_to_nodes</span>
     
-<div class="viewcode-block" id="convert_skeleton_to_nodes_edges"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.skeleton_utils.convert_skeleton_to_nodes_edges">[docs]</a><span class="k">def</span> <span class="nf">convert_skeleton_to_nodes_edges</span><span class="p">(</span><span class="n">bones_array</span><span class="p">):</span>
+    
+<div class="viewcode-block" id="convert_skeleton_to_nodes_edges"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.skeleton_utils.convert_skeleton_to_nodes_edges">[docs]</a><span class="k">def</span> <span class="nf">convert_skeleton_to_nodes_edges</span><span class="p">(</span>
+    <span class="n">skeleton</span><span class="p">,</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,):</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">all_skeleton_vertices</span> <span class="o">=</span> <span class="n">skeleton</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
+    <span class="n">unique_rows</span><span class="p">,</span><span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">all_skeleton_vertices</span><span class="p">,</span><span class="n">return_inverse</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1">#need to merge unique indices so if within a certain range of each other then merge them together</span>
+    <span class="n">reshaped_indices</span> <span class="o">=</span> <span class="n">indices</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# of unique noes = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_rows</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# of edges = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">reshaped_indices</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total time = </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">st</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">unique_rows</span><span class="p">,</span><span class="n">reshaped_indices</span></div>
+
+<span class="n">convert_skeleton_to_nodes_edges_optimized</span> <span class="o">=</span> <span class="n">convert_skeleton_to_nodes_edges</span>
+
+<div class="viewcode-block" id="convert_skeleton_to_nodes_edges_old"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.skeleton_utils.convert_skeleton_to_nodes_edges_old">[docs]</a><span class="k">def</span> <span class="nf">convert_skeleton_to_nodes_edges_old</span><span class="p">(</span>
+    <span class="n">bones_array</span><span class="p">,</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+    <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
     <span class="c1">#unpacks so just list of vertices</span>
     <span class="n">bones_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">bones_array</span><span class="p">)</span>
     
@@ -261,9 +287,15 @@
     <span class="c1">#reshapes the vertex list to become an edge list (just with the labels so can put into netowrkx graph)</span>
     <span class="n">edges_with_coefficients</span> <span class="o">=</span>  <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">vertices_unpacked_coefficients</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span>
 
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# of unique noes = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">unique_rows</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;# of edges = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">edges_with_coefficients</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total time = </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">st</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        
     <span class="k">return</span> <span class="n">unique_rows</span><span class="p">,</span> <span class="n">edges_with_coefficients</span></div>
 
-<div class="viewcode-block" id="convert_skeleton_to_nodes_edges_optimized"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.skeleton_utils.convert_skeleton_to_nodes_edges_optimized">[docs]</a><span class="k">def</span> <span class="nf">convert_skeleton_to_nodes_edges_optimized</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
+<div class="viewcode-block" id="convert_skeleton_to_nodes_edges_optimized_old"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.skeleton_utils.convert_skeleton_to_nodes_edges_optimized_old">[docs]</a><span class="k">def</span> <span class="nf">convert_skeleton_to_nodes_edges_optimized_old</span><span class="p">(</span><span class="n">array</span><span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Purpose: will return the nodes and edges but without making the nodes unique</span>
 <span class="sd">    (so will have some repeats)</span>
@@ -409,7 +441,7 @@
                             <span class="n">other_scatter</span><span class="o">=</span><span class="p">[],</span>
                             <span class="n">scatter_size</span> <span class="o">=</span> <span class="mf">0.3</span><span class="p">,</span>
                             <span class="n">other_scatter_colors</span><span class="o">=</span><span class="p">[],</span>
-                            <span class="n">main_scatter_color</span><span class="o">=</span><span class="p">[</span><span class="mf">1.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.</span><span class="p">,</span><span class="mf">0.5</span><span class="p">],</span>
+                            <span class="n">main_scatter_color</span><span class="o">=</span><span class="s2">&quot;red&quot;</span><span class="p">,</span><span class="c1">#[1.,0.,0.,0.5],</span>
                             <span class="n">scatter_with_widgets</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
                             <span class="n">buffer</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
                            <span class="n">axis_box_off</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
@@ -6267,15 +6299,17 @@
 
 
 
-<div class="viewcode-block" id="skeleton_path_between_skeleton_coordinates"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.skeleton_utils.skeleton_path_between_skeleton_coordinates">[docs]</a><span class="k">def</span> <span class="nf">skeleton_path_between_skeleton_coordinates</span><span class="p">(</span><span class="n">starting_coordinate</span><span class="p">,</span>
-                                               <span class="n">destination_coordinate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">skeleton</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
-            <span class="n">skeleton_graph</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">destination_node</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-            <span class="n">only_skeleton_distance</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="n">plot_skeleton_path</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="n">return_singular_node_path_if_no_path</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
-            <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,):</span>
+<div class="viewcode-block" id="skeleton_path_between_skeleton_coordinates"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.skeleton_utils.skeleton_path_between_skeleton_coordinates">[docs]</a><span class="k">def</span> <span class="nf">skeleton_path_between_skeleton_coordinates</span><span class="p">(</span>
+    <span class="n">starting_coordinate</span><span class="p">,</span>
+    <span class="n">destination_coordinate</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">skeleton</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">skeleton_graph</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">destination_node</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">only_skeleton_distance</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">plot_skeleton_path</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">return_singular_node_path_if_no_path</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot; </span>
 
 <span class="sd">    Purpose: To find the skeleton_path_between two coordinates (that lie on a skeleton)</span>
@@ -6325,9 +6359,11 @@
 
     <span class="c1">#1) Find the graph node of the destination coordinate</span>
     <span class="k">if</span> <span class="n">destination_node</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="n">destination_node</span><span class="o">=</span> <span class="n">xu</span><span class="o">.</span><span class="n">get_graph_node_by_coordinate</span><span class="p">(</span><span class="n">skeleton_graph</span><span class="p">,</span>
-                                                                        <span class="n">destination_coordinate</span><span class="p">,</span>
-                                                                        <span class="n">return_single_value</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">destination_node</span><span class="o">=</span> <span class="n">xu</span><span class="o">.</span><span class="n">get_graph_node_by_coordinate</span><span class="p">(</span>
+            <span class="n">skeleton_graph</span><span class="p">,</span>
+            <span class="n">destination_coordinate</span><span class="p">,</span>
+            <span class="n">return_single_value</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
         <span class="k">if</span> <span class="n">debug_time</span><span class="p">:</span>
             <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;destination_node: </span><span class="si">{</span><span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">st</span><span class="p">,</span><span class="mi">4</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
