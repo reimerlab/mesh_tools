@@ -4607,7 +4607,7 @@ def center_mesh_at_point(mesh,new_center):
     mesh.vertices = mesh.vertices - new_center
     return mesh
 
-def sphere_mesh(center,radius=100):
+def sphere_mesh(center=[0,0,0],radius=100):
     sph = trimesh.creation.icosphere(subdivisions = 1,radius=radius)
     return center_mesh(sph,center)
 

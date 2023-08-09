@@ -174,7 +174,33 @@ def convert_skeleton_to_nodes(skeleton):
 
 convert_skeleton_to_coordinates = convert_skeleton_to_nodes
     
-def convert_skeleton_to_nodes_edges(bones_array):
+    
+def convert_skeleton_to_nodes_edges(
+    skeleton,
+    verbose = False,):
+    
+    if verbose:
+        st = time.time()
+    all_skeleton_vertices = skeleton.reshape(-1,3)
+    unique_rows,indices = np.unique(all_skeleton_vertices,return_inverse=True,axis=0)
+
+    #need to merge unique indices so if within a certain range of each other then merge them together
+    reshaped_indices = indices.reshape(-1,2)
+    
+    if verbose:
+        print(f"# of unique noes = {len(unique_rows)}")
+        print(f"# of edges = {len(reshaped_indices)}")
+        print(f"Total time = {time.time() - st}")
+    
+    return unique_rows,reshaped_indices
+
+convert_skeleton_to_nodes_edges_optimized = convert_skeleton_to_nodes_edges
+
+def convert_skeleton_to_nodes_edges_old(
+    bones_array,
+    verbose = False,
+    ):
+    st = time.time()
     #unpacks so just list of vertices
     bones_array = np.array(bones_array)
     
@@ -190,9 +216,15 @@ def convert_skeleton_to_nodes_edges(bones_array):
     #reshapes the vertex list to become an edge list (just with the labels so can put into netowrkx graph)
     edges_with_coefficients =  np.array(vertices_unpacked_coefficients).reshape(-1,2)
 
+    if verbose:
+        print(f"# of unique noes = {len(unique_rows)}")
+        print(f"# of edges = {len(edges_with_coefficients)}")
+        print(f"Total time = {time.time() - st}")
+        
+        
     return unique_rows, edges_with_coefficients
 
-def convert_skeleton_to_nodes_edges_optimized(array):
+def convert_skeleton_to_nodes_edges_optimized_old(array):
     """
     Purpose: will return the nodes and edges but without making the nodes unique
     (so will have some repeats)
@@ -338,7 +370,7 @@ def graph_skeleton_and_mesh(main_mesh_verts=[],
                             other_scatter=[],
                             scatter_size = 0.3,
                             other_scatter_colors=[],
-                            main_scatter_color=[1.,0.,0.,0.5],
+                            main_scatter_color="red",#[1.,0.,0.,0.5],
                             scatter_with_widgets = False,
                             buffer=1000,
                            axis_box_off=True,
@@ -6196,15 +6228,17 @@ def high_degree_coordinates_on_path(limb_obj,curr_path_to_cut,
 
 
 
-def skeleton_path_between_skeleton_coordinates(starting_coordinate,
-                                               destination_coordinate=None,
-            skeleton=None,
-            skeleton_graph = None,
-            destination_node = None,
-            only_skeleton_distance = False,
-            plot_skeleton_path = False,
-            return_singular_node_path_if_no_path = False,
-            verbose = False,):
+def skeleton_path_between_skeleton_coordinates(
+    starting_coordinate,
+    destination_coordinate=None,
+    skeleton=None,
+    skeleton_graph = None,
+    destination_node = None,
+    only_skeleton_distance = False,
+    plot_skeleton_path = False,
+    return_singular_node_path_if_no_path = False,
+    verbose = False,
+    ):
     """ 
 
     Purpose: To find the skeleton_path_between two coordinates (that lie on a skeleton)
@@ -6254,9 +6288,11 @@ def skeleton_path_between_skeleton_coordinates(starting_coordinate,
 
     #1) Find the graph node of the destination coordinate
     if destination_node is None:
-        destination_node= xu.get_graph_node_by_coordinate(skeleton_graph,
-                                                                        destination_coordinate,
-                                                                        return_single_value=True)
+        destination_node= xu.get_graph_node_by_coordinate(
+            skeleton_graph,
+            destination_coordinate,
+            return_single_value=True
+        )
         if debug_time:
             print(f"destination_node: {np.round(time.time() - st,4)}")
             st = time.time()
