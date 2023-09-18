@@ -10,11 +10,11 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/doctools.js"></script>
-        <script src="../../_static/sphinx_highlight.js"></script>
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -1995,7 +1995,8 @@
     <span class="n">endpoints_must_keep</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="c1">#must be the same size as soma_border_vertices</span>
     <span class="n">print_flag</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="n">return_removed_skeletons</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">error_if_endpoints_must_keep_not_endnode</span><span class="o">=</span><span class="kc">True</span>
+    <span class="n">error_if_endpoints_must_keep_not_endnode</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
     <span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Example of how to use: </span>
@@ -2091,7 +2092,8 @@
                 <span class="k">break</span>
         <span class="k">return</span> <span class="n">node_list</span>
     
-    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using Distance measure </span><span class="si">{</span><span class="n">distance_func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">print_flag</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Using Distance measure </span><span class="si">{</span><span class="n">distance_func</span><span class="o">.</span><span class="vm">__name__</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
     
     
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">G</span><span class="p">)</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="nb">type</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()),</span><span class="nb">type</span><span class="p">(</span><span class="n">xu</span><span class="o">.</span><span class="n">GraphOrderedEdges</span><span class="p">())]:</span>
@@ -2105,11 +2107,13 @@
     
     
     <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">endpoints_must_keep</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">endpoints_must_keep</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;endpoints_must_keep = </span><span class="si">{</span><span class="n">endpoints_must_keep</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">print_flag</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;endpoints_must_keep = </span><span class="si">{</span><span class="n">endpoints_must_keep</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">all_single_nodes_to_eliminate</span> <span class="o">=</span> <span class="p">[]</span>
         <span class="n">endpoints_must_keep</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">endpoints_must_keep</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">)</span>
         
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of end_nodes BEFORE filtering = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">end_nodes</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">print_flag</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Number of end_nodes BEFORE filtering = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">end_nodes</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">end_nodes_coordinates</span> <span class="o">=</span> <span class="n">xu</span><span class="o">.</span><span class="n">get_node_attributes</span><span class="p">(</span><span class="n">G</span><span class="p">,</span><span class="n">node_list</span><span class="o">=</span><span class="n">end_nodes</span><span class="p">)</span>
         
         <span class="k">for</span> <span class="n">end_k</span> <span class="ow">in</span> <span class="n">endpoints_must_keep</span><span class="p">:</span>
@@ -2120,17 +2124,20 @@
                     <span class="n">end_node_must_keep_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">end_nodes</span><span class="o">==</span><span class="n">end_node_idx</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
                 <span class="k">except</span><span class="p">:</span>
                     <span class="k">if</span> <span class="n">error_if_endpoints_must_keep_not_endnode</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;end_nodes = </span><span class="si">{</span><span class="n">end_nodes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;end_node_idx = </span><span class="si">{</span><span class="n">end_node_idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">print_flag</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;end_nodes = </span><span class="si">{</span><span class="n">end_nodes</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;end_node_idx = </span><span class="si">{</span><span class="n">end_node_idx</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
                         <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Something went wrong when trying to find end nodes&quot;</span><span class="p">)</span>
                     <span class="k">else</span><span class="p">:</span>
-                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;end_nodes = </span><span class="si">{</span><span class="n">end_nodes</span><span class="si">}</span><span class="s2"> wasn&#39;t endnode but continuing anyway&quot;</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">print_flag</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;end_nodes = </span><span class="si">{</span><span class="n">end_nodes</span><span class="si">}</span><span class="s2"> wasn&#39;t endnode but continuing anyway&quot;</span><span class="p">)</span>
                         <span class="k">continue</span>
                 <span class="n">all_single_nodes_to_eliminate</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">end_node_must_keep_idx</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Passed end node to keep that wasn&#39;t in the graph&quot;</span><span class="p">)</span>
             
-        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;all_single_nodes_to_eliminate = </span><span class="si">{</span><span class="n">all_single_nodes_to_eliminate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">print_flag</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;all_single_nodes_to_eliminate = </span><span class="si">{</span><span class="n">all_single_nodes_to_eliminate</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
         <span class="n">new_end_nodes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">k</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">end_nodes</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">all_single_nodes_to_eliminate</span><span class="p">])</span>
 
         <span class="c1">#doing the reassigning</span>
@@ -2151,7 +2158,8 @@
     <span class="n">skeletons_removed</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">end_nodes</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">end_nodes_dist_to_j</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="c1">#no end nodes so need to return </span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;no small end nodes to get rid of so returning whole skeleton&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">print_flag</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;no small end nodes to get rid of so returning whole skeleton&quot;</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         
         
