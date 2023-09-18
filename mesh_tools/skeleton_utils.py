@@ -1924,7 +1924,8 @@ def clean_skeleton(
     endpoints_must_keep = None, #must be the same size as soma_border_vertices
     print_flag=False,
     return_removed_skeletons=False,
-    error_if_endpoints_must_keep_not_endnode=True
+    error_if_endpoints_must_keep_not_endnode=True,
+    verbose=False,
     ):
     """
     Example of how to use: 
@@ -2020,7 +2021,8 @@ def clean_skeleton(
                 break
         return node_list
     
-    print(f"Using Distance measure {distance_func.__name__}")
+    if print_flag:
+        print(f"Using Distance measure {distance_func.__name__}")
     
     
     if type(G) not in [type(nx.Graph()),type(xu.GraphOrderedEdges())]:
@@ -2034,11 +2036,13 @@ def clean_skeleton(
     
     
     if (not endpoints_must_keep is None) and len(endpoints_must_keep)>0:
-        print(f"endpoints_must_keep = {endpoints_must_keep}")
+        if print_flag:
+            print(f"endpoints_must_keep = {endpoints_must_keep}")
         all_single_nodes_to_eliminate = []
         endpoints_must_keep = np.array(endpoints_must_keep).reshape(-1,3)
         
-        print(f"Number of end_nodes BEFORE filtering = {len(end_nodes)}")
+        if print_flag:
+            print(f"Number of end_nodes BEFORE filtering = {len(end_nodes)}")
         end_nodes_coordinates = xu.get_node_attributes(G,node_list=end_nodes)
         
         for end_k in endpoints_must_keep:
@@ -2049,17 +2053,20 @@ def clean_skeleton(
                     end_node_must_keep_idx = np.where(end_nodes==end_node_idx)[0][0]
                 except:
                     if error_if_endpoints_must_keep_not_endnode:
-                        print(f"end_nodes = {end_nodes}")
-                        print(f"end_node_idx = {end_node_idx}")
+                        if print_flag:
+                            print(f"end_nodes = {end_nodes}")
+                            print(f"end_node_idx = {end_node_idx}")
                         raise Exception("Something went wrong when trying to find end nodes")
                     else:
-                        print(f"end_nodes = {end_nodes} wasn't endnode but continuing anyway")
+                        if print_flag:
+                            print(f"end_nodes = {end_nodes} wasn't endnode but continuing anyway")
                         continue
                 all_single_nodes_to_eliminate.append(end_node_must_keep_idx)
             else:
                 raise Exception("Passed end node to keep that wasn't in the graph")
             
-        print(f"all_single_nodes_to_eliminate = {all_single_nodes_to_eliminate}")
+        if print_flag:
+            print(f"all_single_nodes_to_eliminate = {all_single_nodes_to_eliminate}")
         new_end_nodes = np.array([k for i,k in enumerate(end_nodes) if i not in all_single_nodes_to_eliminate])
 
         #doing the reassigning
@@ -2080,7 +2087,8 @@ def clean_skeleton(
     skeletons_removed = []
     if len(end_nodes) == 0 or len(end_nodes_dist_to_j) == 0:
         #no end nodes so need to return 
-        print("no small end nodes to get rid of so returning whole skeleton")
+        if print_flag:
+            print("no small end nodes to get rid of so returning whole skeleton")
     else:
         
         

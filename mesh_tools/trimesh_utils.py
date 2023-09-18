@@ -7106,6 +7106,12 @@ def query_meshes_from_restrictions(
         return idx
     else:
         return return_meshes
+    
+    
+from python_tools import mesh_utils as meshu
+clear_mesh_cache = meshu.clear_mesh_cache
+clear_all_mesh_cache_in_nested_data_struct = meshu.clear_all_mesh_cache_in_nested_data_struct
+        
         
 query_meshes_from_stats = query_meshes_from_restrictions
 restrict_meshes_from_stats = query_meshes_from_restrictions

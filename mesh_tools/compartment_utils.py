@@ -1476,7 +1476,6 @@ def resolve_empty_conflicting_face_labels(
                         connectivity=connectivity,
                         )
 
-    print("AFTER face_lookup_resolved_test")
 
     # -- wheck that the face coloring did not have any empty faces --
     empty_faces = np.where(face_coloring_copy==-1)[0]
