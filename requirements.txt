@@ -11,7 +11,7 @@ matplotlib>=3.3.4
 networkx>=2.5
 open3d>=0.11.2
 pymeshfix>=0.13.4
-python_tools @ git+https://git@github.com/bacelii/python_tools.git
+datasci_tools @ git+https://git@github.com/bacelii/datasci_tools.git
 machine_learning_tools @ git+https://git@github.com/bacelii/machine_learning_tools.git
 scipy>=1.5.4
 tqdm>=4.62.2

@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 from trimesh.grouping import *
 from trimesh.graph import *
-from python_tools import numpy_dep as np
+from datasci_tools import numpy_dep as np
 import open3d as o3d
 import pandas as pd
 from pathlib import Path
@@ -557,7 +557,7 @@ def split_significant_pieces_old(new_submesh,
     
     if print_flag:
         print("------Starting the mesh filter for significant outside pieces-------")
-#     from python_tools import system_utils as su
+#     from datasci_tools import system_utils as su
 #     su.compressed_pickle(new_submesh,f"new_submesh_{np.random.randint(10,1000)}")
     if connectivity=="edges":
         mesh_pieces = new_submesh.split(only_watertight=False,repair=False)
@@ -654,7 +654,7 @@ def split_significant_pieces(new_submesh,
     
     if print_flag:
         print("------Starting the mesh filter for significant outside pieces-------")
-#     from python_tools import system_utils as su
+#     from datasci_tools import system_utils as su
 #     su.compressed_pickle(new_submesh,f"new_submesh_{np.random.randint(10,1000)}")
     if connectivity=="edges":
         """ Old way that did not have options for the indices 
@@ -892,7 +892,7 @@ def split(mesh, only_watertight=False,
         ordered_comp_indices = np.array([k.astype("int") for k in ordered_components])
     except:
         pass
-        # from python_tools import system_utils as su
+        # from datasci_tools import system_utils as su
         # su.compressed_pickle(ordered_components,"ordered_components")
         # print(f"ordered_components = {ordered_components}")
         # raise Exception("ordered_components")
@@ -2624,7 +2624,7 @@ def filter_meshes_by_containing_coordinates(mesh_list,nullifying_points,
     
     Ex: 
     import trimesh
-    from python_tools import numpy_dep as np
+    from datasci_tools import numpy_dep as np
     tu = reload(tu)
 
     curr_limb = recovered_neuron[2]
@@ -7108,7 +7108,7 @@ def query_meshes_from_restrictions(
         return return_meshes
     
     
-from python_tools import mesh_utils as meshu
+from datasci_tools import mesh_utils as meshu
 clear_mesh_cache = meshu.clear_mesh_cache
 clear_all_mesh_cache_in_nested_data_struct = meshu.clear_all_mesh_cache_in_nested_data_struct
         
@@ -7122,16 +7122,19 @@ from . import compartment_utils as cu
 from . import skeleton_utils as sk
 
 #--- from machine_learning_tools ---
-from machine_learning_tools import dimensionality_reduction_utils as dru
+try:
+    from machine_learning_tools import dimensionality_reduction_utils as dru
+except:
+    dru = None
 
-#--- from python_tools ---
-from python_tools import general_utils as gu
-from python_tools import ipyvolume_utils as ipvu
-from python_tools import matplotlib_utils as mu
-from python_tools import networkx_utils as xu
-from python_tools import numpy_utils as nu
-from python_tools import pandas_utils as pu
-from python_tools import system_utils as su
-from python_tools.tqdm_utils import tqdm
+#--- from datasci_tools ---
+from datasci_tools import general_utils as gu
+from datasci_tools import ipyvolume_utils as ipvu
+from datasci_tools import matplotlib_utils as mu
+from datasci_tools import networkx_utils as xu
+from datasci_tools import numpy_utils as nu
+from datasci_tools import pandas_utils as pu
+from datasci_tools import system_utils as su
+from datasci_tools.tqdm_utils import tqdm
 
 from . import trimesh_utils as tu

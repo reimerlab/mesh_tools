@@ -1,7 +1,7 @@
 
 import copy
 from io import StringIO
-from python_tools import numpy_dep as np
+from datasci_tools import numpy_dep as np
 import os
 from pathlib import Path
 import random

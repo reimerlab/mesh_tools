@@ -11,7 +11,7 @@ from meshparty.trimesh_io import Mesh
 
 from meshparty import trimesh_vtk, utils, mesh_filters
 import networkx as nx
-from python_tools import numpy_dep as np
+from datasci_tools import numpy_dep as np
 import pandas as pd
 from pykdtree.kdtree import KDTree
 from pykdtree.kdtree import KDTree as pyKDTree
@@ -1363,10 +1363,10 @@ from . import compartment_utils as cu
 from . import skeleton_utils as sk
 from . import trimesh_utils as tu
 
-#--- from python_tools ---
-from python_tools import general_utils as gu
-from python_tools import ipyvolume_utils as ipvu
-from python_tools import numpy_utils as nu
-from python_tools.tqdm_utils import tqdm
+#--- from datasci_tools ---
+from datasci_tools import general_utils as gu
+from datasci_tools import ipyvolume_utils as ipvu
+from datasci_tools import numpy_utils as nu
+from datasci_tools.tqdm_utils import tqdm
 
 from . import meshparty_skeletonize as m_sk

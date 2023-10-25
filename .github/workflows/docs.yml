@@ -33,7 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --use-deprecated=legacy-resolver -r ./requirements.txt
-      # pip3 install git+https://github.com/bacelii/python_tools.git
+      # pip3 install git+https://github.com/bacelii/datasci_tools.git
       - name: Build docs
         run: |
           cd docs

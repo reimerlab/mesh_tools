@@ -13,7 +13,7 @@ import itertools
 import matplotlib.pyplot as plt
 import meshparty
 import networkx as nx
-from python_tools import numpy_dep as np
+from datasci_tools import numpy_dep as np
 import os
 import pathlib
 from pathlib import Path
@@ -38,7 +38,7 @@ def compare_endpoints(endpioints_1,endpoints_2,**kwargs):
     comparing the endpoints of a graph: 
     
     Ex: 
-    from python_tools import networkx_utils as xu
+    from datasci_tools import networkx_utils as xu
     xu = reload(xu)mess
     end_1 = np.array([[2,3,4],[1,4,5]])
     end_2 = np.array([[1,4,5],[2,3,4]])
@@ -929,7 +929,7 @@ def mesh_subtraction_by_skeleton_old(main_mesh,edges,
             else:
                 raise Exception("No contianing indices")
         except:
-            from python_tools import system_utils as su
+            from datasci_tools import system_utils as su
             su.compressed_pickle(main_mesh_sub,"main_mesh_sub")
             su.compressed_pickle(ex_edge,"ex_edge")
             su.compressed_pickle(sub_components_face_indexes,"sub_components_face_indexes")
@@ -2492,7 +2492,7 @@ def combine_close_branch_points(skeleton=None,
     
     Ex: 
     sk = reload(sk)
-    from python_tools import numpy_utils as nu
+    from datasci_tools import numpy_utils as nu
     nu = reload(nu)
     branch_skeleton_data_cleaned = []
     for i,curr_sk in enumerate(branch_skeleton_data):
@@ -2783,7 +2783,7 @@ def old_combine_close_branch_points(skeleton,
     
     Ex: 
     sk = reload(sk)
-    from python_tools import numpy_utils as nu
+    from datasci_tools import numpy_utils as nu
     nu = reload(nu)
     branch_skeleton_data_cleaned = []
     for i,curr_sk in enumerate(branch_skeleton_data):
@@ -4629,12 +4629,12 @@ def skeletonize_and_clean_connected_branch_CGAL(mesh,
 
 #                     sk_debug = True
 #                     if sk_debug:
-#                         from python_tools import system_utils as su
+#                         from datasci_tools import system_utils as su
 #                         print("**Saving the skeletons**")
 #                         su.compressed_pickle(branch,
 #                                             "curr_branch_saved")
 #                     if sk_debug:
-#                         from python_tools import system_utils as su
+#                         from datasci_tools import system_utils as su
 #                         print("**Saving the skeletons**")
 #                         su.compressed_pickle(current_skeleton,
 #                                             "current_skeleton")
@@ -4668,7 +4668,7 @@ def skeletonize_and_clean_connected_branch_CGAL(mesh,
 
     #                     sk_debug = True
     #                     if sk_debug:
-    #                         from python_tools import system_utils as su
+    #                         from datasci_tools import system_utils as su
     #                         print("**Saving the skeletons**")
     #                         su.compressed_pickle(current_skeleton,
     #                                             "current_skeleton_after_addition")
@@ -4739,7 +4739,7 @@ def skeletonize_and_clean_connected_branch_CGAL(mesh,
 
 #                     sk_debug = True
 #                     if sk_debug:
-#                         from python_tools import system_utils as su
+#                         from datasci_tools import system_utils as su
 #                         print("**Saving the skeletons**")
 #                         su.compressed_pickle(new_cleaned_skeleton,
 #                                             "new_cleaned_skeleton")
@@ -6980,7 +6980,7 @@ def coordinates_along_skeleton_offset_from_start(
     
     Ex: 
     from mesh_tools import skeleton_utils as sk
-    from python_tools import numpy_dep as np
+    from datasci_tools import numpy_dep as np
 
 
     skeleton = neuron_obj[0][42].skeleton
@@ -7576,7 +7576,7 @@ def coordinates_from_downstream_dist(
         print(f"coordinates = {coordinates.shape}")
         
     if plot:
-        from python_tools import matplotlib_utils as mu
+        from datasci_tools import matplotlib_utils as mu
         ipvu.plot_objects(
             scatters=[k.reshape(-1,3) for k in coordinates],
             scatters_colors=list(mu.color_transition(n=len(coordinates))),
@@ -8010,16 +8010,16 @@ from . import trimesh_utils as tu
 from .trimesh_utils import split_significant_pieces,split,combine_meshes,write_neuron_off
 
 
-#--- from python_tools ---
-from python_tools import general_utils as gu
-from python_tools import ipyvolume_utils as ipvu
-from python_tools import matplotlib_utils as mu
-from python_tools import mesh_utils as meshu
-from python_tools import networkx_utils as xu
-from python_tools import numpy_utils as nu
-from python_tools import statistics_utils as stu
-from python_tools import system_utils as su
-from python_tools.tqdm_utils import tqdm
+#--- from datasci_tools ---
+from datasci_tools import general_utils as gu
+from datasci_tools import ipyvolume_utils as ipvu
+from datasci_tools import matplotlib_utils as mu
+from datasci_tools import mesh_utils as meshu
+from datasci_tools import networkx_utils as xu
+from datasci_tools import numpy_utils as nu
+from datasci_tools import statistics_utils as stu
+from datasci_tools import system_utils as su
+from datasci_tools.tqdm_utils import tqdm
 
 unique_vertices_edges_from_vertices_edges = xu.unique_vertices_edges_from_vertices_edges
 graph_from_unique_vertices_edges = xu.graph_from_unique_vertices_edges
