@@ -82,10 +82,10 @@ RUN python3 -m pip --no-cache-dir install \
     jupyter_contrib_nbextensions \
     simplejson \
     jedi==0.17.2 \
-    ipywidgets \
+    ipywidgets==8.1.1 \
     ipywebrtc \
     jupyterlab_widgets \
-    ipyvolume
+    ipyvolume==0.6.3
 
 RUN jupyter nbextension enable --py --sys-prefix ipyvolume \
     && jupyter nbextension enable --py --sys-prefix widgetsnbextension
