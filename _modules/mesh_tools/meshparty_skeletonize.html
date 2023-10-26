@@ -1,0 +1,1473 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>mesh_tools.meshparty_skeletonize &mdash; mesh_tools  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js?v=b3ba4146"></script>
+        <script src="../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            mesh_tools
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">mesh_tools</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">mesh_tools</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">mesh_tools.meshparty_skeletonize</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for mesh_tools.meshparty_skeletonize</h1><div class="highlight"><pre>
+<span></span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">defaultdict</span>
+<span class="kn">from</span> <span class="nn">copy</span> <span class="kn">import</span> <span class="n">deepcopy</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
+<span class="kn">from</span> <span class="nn">importlib</span> <span class="kn">import</span> <span class="n">reload</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">meshparty.skeleton</span> <span class="kn">import</span> <span class="n">Skeleton</span>
+<span class="kn">from</span> <span class="nn">meshparty</span> <span class="kn">import</span> <span class="n">trimesh_io</span>
+<span class="kn">from</span> <span class="nn">meshparty.trimesh_io</span> <span class="kn">import</span> <span class="n">Mesh</span>
+
+
+<span class="kn">from</span> <span class="nn">meshparty</span> <span class="kn">import</span> <span class="n">trimesh_vtk</span><span class="p">,</span> <span class="n">utils</span><span class="p">,</span> <span class="n">mesh_filters</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">datasci_tools</span> <span class="kn">import</span> <span class="n">numpy_dep</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">pykdtree.kdtree</span> <span class="kn">import</span> <span class="n">KDTree</span>
+<span class="kn">from</span> <span class="nn">pykdtree.kdtree</span> <span class="kn">import</span> <span class="n">KDTree</span> <span class="k">as</span> <span class="n">pyKDTree</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="kn">import</span> <span class="n">sparse</span><span class="p">,</span> <span class="n">spatial</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">from</span> <span class="nn">tqdm</span> <span class="kn">import</span> <span class="n">trange</span> 
+<span class="kn">import</span> <span class="nn">trimesh.ray</span>
+<span class="kn">from</span> <span class="nn">trimesh.ray</span> <span class="kn">import</span> <span class="n">ray_pyembree</span>
+
+
+<span class="c1"># --------------------- Functions from skeleton.py ------------------- #</span>
+<div class="viewcode-block" id="compute_segments"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.compute_segments">[docs]</a><span class="k">def</span> <span class="nf">compute_segments</span><span class="p">(</span><span class="n">sk</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Precompute segments between branches and end points&quot;&quot;&quot;</span>
+        <span class="n">segments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">segment_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sk</span><span class="o">.</span><span class="n">vertices</span><span class="p">))</span><span class="o">-</span><span class="mi">1</span>
+
+        <span class="n">path_queue</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">end_points</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+        <span class="n">bp_all</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">branch_points</span>
+        <span class="n">bp_seen</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">seg_ind</span> <span class="o">=</span> <span class="mi">0</span>
+
+        
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">path_queue</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">0</span><span class="p">:</span>
+            <span class="n">ind</span> <span class="o">=</span> <span class="n">path_queue</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+            <span class="n">segment</span> <span class="o">=</span> <span class="p">[</span><span class="n">ind</span><span class="p">]</span>
+            <span class="n">ptr</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">path_to_root</span><span class="p">(</span><span class="n">ind</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ptr</span><span class="p">)</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">pind</span> <span class="ow">in</span> <span class="n">ptr</span><span class="p">[</span><span class="mi">1</span><span class="p">:]:</span>
+                    <span class="k">if</span> <span class="n">pind</span> <span class="ow">in</span> <span class="n">bp_all</span><span class="p">:</span>
+                        <span class="n">segment</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pind</span><span class="p">)</span>
+                        <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">segment</span><span class="p">))</span>
+                        <span class="n">segment_map</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">=</span> <span class="n">seg_ind</span>
+                        <span class="n">seg_ind</span> <span class="o">+=</span> <span class="mi">1</span>
+                        <span class="k">if</span> <span class="n">pind</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">bp_seen</span><span class="p">:</span>
+                            <span class="n">path_queue</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pind</span><span class="p">)</span>
+                            <span class="n">bp_seen</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pind</span><span class="p">)</span>
+                        <span class="k">break</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">segment</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pind</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span> <span class="c1">#after the for loop which means it did not experience a break</span>
+                    <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">segment</span><span class="p">))</span>
+                    <span class="n">segment_map</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">=</span> <span class="n">seg_ind</span>
+                    <span class="n">seg_ind</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">segment</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="c1">#print(f&quot;segment for length 1 = {segment}&quot;)</span>
+                <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">segment</span><span class="p">))</span>
+                <span class="n">segment_map</span><span class="p">[</span><span class="n">segment</span><span class="p">]</span> <span class="o">=</span> <span class="n">seg_ind</span>
+                <span class="n">seg_ind</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">return</span> <span class="n">segments</span><span class="p">,</span> <span class="n">segment_map</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span></div>
+
+
+<span class="c1"># --------------------- Functions from skeletonize.py ------------------- #</span>
+<div class="viewcode-block" id="skeletonize_mesh"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.skeletonize_mesh">[docs]</a><span class="k">def</span> <span class="nf">skeletonize_mesh</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">soma_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">soma_radius</span><span class="o">=</span><span class="mi">7500</span><span class="p">,</span> <span class="n">collapse_soma</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                     <span class="n">invalidation_d</span><span class="o">=</span><span class="mi">12000</span><span class="p">,</span> <span class="n">smooth_vertices</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">smooth_neighborhood</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span><span class="n">compute_radius</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                     <span class="n">compute_original_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">cc_vertex_thresh</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Build skeleton object from mesh skeletonization</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mesh: meshparty.trimesh_io.Mesh</span>
+<span class="sd">        the mesh to skeletonize, defaults assume vertices in nm</span>
+<span class="sd">    soma_pt: np.array</span>
+<span class="sd">        a length 3 array specifying to soma location to make the root</span>
+<span class="sd">        default=None, in which case a heuristic root will be chosen</span>
+<span class="sd">        in units of mesh vertices. </span>
+<span class="sd">    soma_radius: float</span>
+<span class="sd">        distance in mesh vertex units over which to consider mesh </span>
+<span class="sd">        vertices close to soma_pt to belong to soma</span>
+<span class="sd">        these vertices will automatically be invalidated and no</span>
+<span class="sd">        skeleton branches will attempt to reach them.</span>
+<span class="sd">        This distance will also be used to collapse all skeleton</span>
+<span class="sd">        points within this distance to the soma_pt root if collpase_soma</span>
+<span class="sd">        is true. (default=7500 (nm))</span>
+<span class="sd">    collapse_soma: bool</span>
+<span class="sd">        whether to collapse the skeleton around the soma point (default True)</span>
+<span class="sd">    invalidation_d: float</span>
+<span class="sd">        the distance along the mesh to invalidate when applying TEASAR</span>
+<span class="sd">        like algorithm.  Controls how detailed a structure the skeleton</span>
+<span class="sd">        algorithm reaches. default (12000 (nm))</span>
+<span class="sd">    smooth_vertices: bool</span>
+<span class="sd">        whether to smooth the vertices of the skeleton</span>
+<span class="sd">    compute_radius: bool</span>
+<span class="sd">        whether to calculate the radius of the skeleton at each point on the skeleton</span>
+<span class="sd">        (default True)</span>
+<span class="sd">    compute_original_index: bool</span>
+<span class="sd">        whether to calculate how each of the mesh nodes maps onto the skeleton</span>
+<span class="sd">        (default True)</span>
+<span class="sd">    cc_vertex_thresh : int, optional</span>
+<span class="sd">        Smallest number of vertices in a connected component to skeletonize.</span>
+<span class="sd">    verbose: bool</span>
+<span class="sd">        whether to print verbose logging</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    :obj:`meshparty.skeleton.Skeleton`</span>
+<span class="sd">           a Skeleton object for this mesh</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;smooth_neighborhood = </span><span class="si">{</span><span class="n">smooth_neighborhood</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;smooth_neighborhood = </span><span class="si">{</span><span class="n">smooth_neighborhood</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">skel_verts</span><span class="p">,</span> <span class="n">skel_edges</span><span class="p">,</span> <span class="n">smooth_verts</span><span class="p">,</span> <span class="n">orig_skel_index</span><span class="p">,</span> <span class="n">skel_map</span> <span class="o">=</span> <span class="n">calculate_skeleton_paths_on_mesh</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span>
+                                                                                                       <span class="n">soma_pt</span><span class="o">=</span><span class="n">soma_pt</span><span class="p">,</span>
+                                                                                                       <span class="n">soma_thresh</span><span class="o">=</span><span class="n">soma_radius</span><span class="p">,</span>
+                                                                                                       <span class="n">invalidation_d</span><span class="o">=</span><span class="n">invalidation_d</span><span class="p">,</span>
+                                                                                                       <span class="n">cc_vertex_thresh</span><span class="o">=</span><span class="n">cc_vertex_thresh</span><span class="p">,</span>
+                                                                                                       <span class="n">smooth_neighborhood</span><span class="o">=</span><span class="n">smooth_neighborhood</span><span class="p">,</span>
+                                                                                                      <span class="n">return_map</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;skel_verts.shape = </span><span class="si">{</span><span class="n">skel_verts</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;orig_skel_index.shape = </span><span class="si">{</span><span class="n">orig_skel_index</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+
+    <span class="k">if</span> <span class="n">smooth_vertices</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">skel_verts</span> <span class="o">=</span> <span class="n">smooth_verts</span>
+        
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;After smooth verts skel_verts.shape = </span><span class="si">{</span><span class="n">skel_verts</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">collapse_soma</span> <span class="ow">is</span> <span class="kc">True</span> <span class="ow">and</span> <span class="n">soma_pt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">soma_verts</span> <span class="o">=</span> <span class="n">mesh_filters</span><span class="o">.</span><span class="n">filter_spatial_distance_from_points</span><span class="p">(</span>
+            <span class="n">mesh</span><span class="p">,</span> <span class="p">[</span><span class="n">soma_pt</span><span class="p">],</span> <span class="n">soma_radius</span><span class="p">)</span>
+        <span class="n">new_v</span><span class="p">,</span> <span class="n">new_e</span><span class="p">,</span> <span class="n">new_skel_map</span><span class="p">,</span> <span class="n">vert_filter</span><span class="p">,</span> <span class="n">root_ind</span> <span class="o">=</span> <span class="n">collapse_soma_skeleton</span><span class="p">(</span><span class="n">soma_pt</span><span class="p">,</span> <span class="n">skel_verts</span><span class="p">,</span> <span class="n">skel_edges</span><span class="p">,</span>
+                                                                                   <span class="n">soma_d_thresh</span><span class="o">=</span><span class="n">soma_radius</span><span class="p">,</span> <span class="n">mesh_to_skeleton_map</span><span class="o">=</span><span class="n">skel_map</span><span class="p">,</span>
+                                                                                   <span class="n">soma_mesh_indices</span><span class="o">=</span><span class="n">soma_verts</span><span class="p">,</span> <span class="n">return_filter</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                                                                                   <span class="n">return_soma_ind</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">new_v</span><span class="p">,</span> <span class="n">new_e</span><span class="p">,</span> <span class="n">new_skel_map</span> <span class="o">=</span> <span class="n">skel_verts</span><span class="p">,</span> <span class="n">skel_edges</span><span class="p">,</span> <span class="n">skel_map</span>
+        <span class="n">vert_filter</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">orig_skel_index</span><span class="p">))</span>
+        
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;new_v.shape = </span><span class="si">{</span><span class="n">new_v</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;vert_filter.shape = </span><span class="si">{</span><span class="n">vert_filter</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">soma_pt</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sk_graph</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">create_csgraph</span><span class="p">(</span><span class="n">new_v</span><span class="p">,</span> <span class="n">new_e</span><span class="p">)</span>
+            <span class="n">root_ind</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">find_far_points_graph</span><span class="p">(</span><span class="n">sk_graph</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Still try to root close to the soma</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">qry_inds</span> <span class="o">=</span> <span class="n">pyKDTree</span><span class="p">(</span><span class="n">new_v</span><span class="p">)</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">soma_pt</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:])</span>
+            <span class="n">root_ind</span> <span class="o">=</span> <span class="n">qry_inds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">skel_map_full_mesh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">node_mask</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">int64</span><span class="p">)</span>
+    <span class="n">skel_map_full_mesh</span><span class="p">[</span><span class="n">mesh</span><span class="o">.</span><span class="n">node_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_skel_map</span>
+    <span class="n">ind_to_fix</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">map_boolean_to_unmasked</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">new_skel_map</span><span class="p">))</span>
+    <span class="n">skel_map_full_mesh</span><span class="p">[</span><span class="n">ind_to_fix</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">props</span> <span class="o">=</span> <span class="p">{}</span>
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;orig_skel_index[vert_filter].shape = </span><span class="si">{</span><span class="n">orig_skel_index</span><span class="p">[</span><span class="n">vert_filter</span><span class="p">]</span><span class="o">.</span><span class="n">shape</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+    <span class="k">if</span> <span class="n">compute_original_index</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">props</span><span class="p">[</span><span class="s1">&#39;mesh_index&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">mesh</span><span class="o">.</span><span class="n">map_indices_to_unmasked</span><span class="p">(</span><span class="n">orig_skel_index</span><span class="p">[</span><span class="n">vert_filter</span><span class="p">]),</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">compute_radius</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+
+        <span class="n">rs</span> <span class="o">=</span> <span class="n">ray_trace_distance</span><span class="p">(</span><span class="n">orig_skel_index</span><span class="p">[</span><span class="n">vert_filter</span><span class="p">],</span> <span class="n">mesh</span><span class="p">)</span>
+        <span class="n">rs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rs</span><span class="p">,</span> <span class="n">soma_radius</span><span class="p">)</span>
+        <span class="n">props</span><span class="p">[</span><span class="s1">&#39;rs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">rs</span>
+
+    <span class="n">sk</span> <span class="o">=</span> <span class="n">Skeleton</span><span class="p">(</span><span class="n">new_v</span><span class="p">,</span> <span class="n">new_e</span><span class="p">,</span> <span class="n">mesh_to_skel_map</span><span class="o">=</span><span class="n">skel_map_full_mesh</span><span class="p">,</span>
+                  <span class="n">vertex_properties</span><span class="o">=</span><span class="n">props</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="n">root_ind</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">sk</span><span class="p">,</span> <span class="n">skel_map</span></div>
+
+
+<div class="viewcode-block" id="calculate_skeleton_paths_on_mesh"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.calculate_skeleton_paths_on_mesh">[docs]</a><span class="k">def</span> <span class="nf">calculate_skeleton_paths_on_mesh</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">soma_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">soma_thresh</span><span class="o">=</span><span class="mi">7500</span><span class="p">,</span>
+                                     <span class="n">invalidation_d</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">smooth_neighborhood</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
+                                     <span class="n">large_skel_path_threshold</span><span class="o">=</span><span class="mi">5000</span><span class="p">,</span>
+                                     <span class="n">cc_vertex_thresh</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span>  <span class="n">return_map</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; function to turn a trimesh object of a neuron into a skeleton, without running soma collapse,</span>
+<span class="sd">    or recasting result into a Skeleton.  Used by :func:`meshparty.skeletonize.skeletonize_mesh` and</span>
+<span class="sd">    makes use of :func:`meshparty.skeletonize.skeletonize_components`</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    mesh: meshparty.trimesh_io.Mesh</span>
+<span class="sd">        the mesh to skeletonize, defaults assume vertices in nm</span>
+<span class="sd">    soma_pt: np.array</span>
+<span class="sd">        a length 3 array specifying to soma location to make the root</span>
+<span class="sd">        default=None, in which case a heuristic root will be chosen</span>
+<span class="sd">        in units of mesh vertices</span>
+<span class="sd">    soma_thresh: float</span>
+<span class="sd">        distance in mesh vertex units over which to consider mesh </span>
+<span class="sd">        vertices close to soma_pt to belong to soma</span>
+<span class="sd">        these vertices will automatically be invalidated and no</span>
+<span class="sd">        skeleton branches will attempt to reach them.</span>
+<span class="sd">        This distance will also be used to collapse all skeleton</span>
+<span class="sd">        points within this distance to the soma_pt root if collpase_soma</span>
+<span class="sd">        is true. (default=7500 (nm))</span>
+<span class="sd">    invalidation_d: float</span>
+<span class="sd">        the distance along the mesh to invalidate when applying TEASAR</span>
+<span class="sd">        like algorithm.  Controls how detailed a structure the skeleton</span>
+<span class="sd">        algorithm reaches. default (10000 (nm))</span>
+<span class="sd">    smooth_neighborhood: int</span>
+<span class="sd">        the neighborhood in edge hopes over which to smooth skeleton locations.</span>
+<span class="sd">        This controls the smoothing of the skeleton</span>
+<span class="sd">        (default 5)</span>
+<span class="sd">    large_skel_path_threshold: int</span>
+<span class="sd">        the threshold in terms of skeleton vertices that skeletons will be</span>
+<span class="sd">        nominated for tip merging.  Smaller skeleton fragments </span>
+<span class="sd">        will not be merged at their tips (default 5000)</span>
+<span class="sd">    cc_vertex_thresh: int</span>
+<span class="sd">        the threshold in terms of vertex numbers that connected components</span>
+<span class="sd">        of the mesh will be considered for skeletonization. mesh connected</span>
+<span class="sd">        components with fewer than these number of vertices will be ignored</span>
+<span class="sd">        by skeletonization algorithm. (default 100)</span>
+<span class="sd">    return_map: bool</span>
+<span class="sd">        whether to return a map of how each mesh vertex maps onto each skeleton vertex</span>
+<span class="sd">        based upon how it was invalidated.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">        skel_verts: np.array</span>
+<span class="sd">            a Nx3 matrix of skeleton vertex positions</span>
+<span class="sd">        skel_edges: np.array</span>
+<span class="sd">            a Kx2 matrix of skeleton edge indices into skel_verts</span>
+<span class="sd">        smooth_verts: np.array</span>
+<span class="sd">            a Nx3 matrix of vertex positions after smoothing</span>
+<span class="sd">        skel_verts_orig: np.array</span>
+<span class="sd">            a N long index of skeleton vertices in the original mesh vertex index</span>
+<span class="sd">        (mesh_to_skeleton_map): np.array</span>
+<span class="sd">            a Mx2 map of mesh vertex indices to skeleton vertex indices</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">debug</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;smooth_neighborhood = </span><span class="si">{</span><span class="n">smooth_neighborhood</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;soma_pt = </span><span class="si">{</span><span class="n">soma_pt</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;invalidation_d = </span><span class="si">{</span><span class="n">invalidation_d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">cc_vertex_thresh</span> <span class="o">=</span> <span class="mi">25</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cc_vertex_thresh = </span><span class="si">{</span><span class="n">cc_vertex_thresh</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        
+    <span class="n">cc_vertex_thresh</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;cc_vertex_thresh = </span><span class="si">{</span><span class="n">cc_vertex_thresh</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">skeletonize_output</span> <span class="o">=</span> <span class="n">skeletonize_components</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span>
+                                                <span class="n">soma_pt</span><span class="o">=</span><span class="n">soma_pt</span><span class="p">,</span>
+                                                <span class="n">soma_thresh</span><span class="o">=</span><span class="n">soma_thresh</span><span class="p">,</span>
+                                                <span class="n">invalidation_d</span><span class="o">=</span><span class="n">invalidation_d</span><span class="p">,</span>
+                                                <span class="n">cc_vertex_thresh</span><span class="o">=</span><span class="n">cc_vertex_thresh</span><span class="p">,</span>
+                                                <span class="n">return_map</span><span class="o">=</span><span class="n">return_map</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">return_map</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">all_paths</span><span class="p">,</span> <span class="n">roots</span><span class="p">,</span> <span class="n">tot_path_lengths</span><span class="p">,</span> <span class="n">mesh_to_skeleton_map</span> <span class="o">=</span> <span class="n">skeletonize_output</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">all_paths</span><span class="p">,</span> <span class="n">roots</span><span class="p">,</span> <span class="n">tot_path_lengths</span> <span class="o">=</span> <span class="n">skeletonize_output</span>
+        
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;all_paths = </span><span class="si">{</span><span class="n">all_paths</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;roots = </span><span class="si">{</span><span class="n">roots</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;tot_path_lengths = </span><span class="si">{</span><span class="n">tot_path_lengths</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+
+    <span class="n">all_edges</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">comp_paths</span> <span class="ow">in</span> <span class="n">all_paths</span><span class="p">:</span>
+        <span class="n">all_edges</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">utils</span><span class="o">.</span><span class="n">paths_to_edges</span><span class="p">(</span><span class="n">comp_paths</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">all_edges</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">tot_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="n">all_edges</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">tot_edges</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+
+    <span class="n">skel_verts</span><span class="p">,</span> <span class="n">skel_edges</span><span class="p">,</span> <span class="n">skel_verts_orig</span> <span class="o">=</span> <span class="n">reduce_verts</span><span class="p">(</span>
+        <span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span> <span class="n">tot_edges</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">smooth_neighborhood</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">smooth_verts</span> <span class="o">=</span> <span class="n">smooth_graph</span><span class="p">(</span>
+        <span class="n">skel_verts</span><span class="p">,</span> <span class="n">skel_edges</span><span class="p">,</span> <span class="n">neighborhood</span><span class="o">=</span><span class="n">smooth_neighborhood</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">smooth_verts</span> <span class="o">=</span> <span class="n">skel_verts</span>
+
+    <span class="k">if</span> <span class="n">return_map</span><span class="p">:</span>
+        <span class="n">mesh_to_skeleton_map</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">nanfilter_shapes</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">tot_edges</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span> <span class="n">mesh_to_skeleton_map</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">mesh_to_skeleton_map</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="n">output_tuple</span> <span class="o">=</span> <span class="p">(</span><span class="n">skel_verts</span><span class="p">,</span> <span class="n">skel_edges</span><span class="p">,</span> <span class="n">smooth_verts</span><span class="p">,</span> <span class="n">skel_verts_orig</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_map</span><span class="p">:</span>
+        <span class="n">output_tuple</span> <span class="o">=</span> <span class="n">output_tuple</span> <span class="o">+</span> <span class="p">(</span><span class="n">mesh_to_skeleton_map</span><span class="p">,)</span>
+
+    <span class="k">return</span> <span class="n">output_tuple</span></div>
+
+
+<div class="viewcode-block" id="reduce_verts"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.reduce_verts">[docs]</a><span class="k">def</span> <span class="nf">reduce_verts</span><span class="p">(</span><span class="n">verts</span><span class="p">,</span> <span class="n">faces</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;removes unused vertices from a graph or mesh</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    verts : numpy.array</span>
+<span class="sd">        NxD numpy array of vertex locations</span>
+<span class="sd">    faces : numpy.array</span>
+<span class="sd">        MxK numpy array of connected shapes (i.e. edges or tris)</span>
+<span class="sd">        (entries are indices into verts)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    ------- </span>
+<span class="sd">    np.array</span>
+<span class="sd">        new_verts, a filtered set of vertices </span>
+<span class="sd">    np.array</span>
+<span class="sd">        new_face, a reindexed set of faces (or edges)</span>
+<span class="sd">    np.array</span>
+<span class="sd">        used_verts, the index of the new_verts in the old verts</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">used_verts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">ravel</span><span class="p">())</span>
+        <span class="n">new_verts</span> <span class="o">=</span> <span class="n">verts</span><span class="p">[</span><span class="n">used_verts</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">new_face</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">faces</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">faces</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]):</span>
+            <span class="n">new_face</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">searchsorted</span><span class="p">(</span><span class="n">used_verts</span><span class="p">,</span> <span class="n">faces</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span>
+    <span class="k">except</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;verts=</span><span class="si">{</span><span class="n">verts</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;faces=</span><span class="si">{</span><span class="n">faces</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;used_verts = </span><span class="si">{</span><span class="n">used_verts</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">Exception</span>
+    <span class="k">return</span> <span class="n">new_verts</span><span class="p">,</span> <span class="n">new_face</span><span class="p">,</span> <span class="n">used_verts</span></div>
+
+
+<div class="viewcode-block" id="skeletonize_components"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.skeletonize_components">[docs]</a><span class="k">def</span> <span class="nf">skeletonize_components</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span>
+                           <span class="n">soma_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">soma_thresh</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+                           <span class="n">invalidation_d</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span>
+                           <span class="n">cc_vertex_thresh</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                           <span class="n">return_map</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; core skeletonization routine, used by :func:`meshparty.skeletonize.calculate_skeleton_paths_on_mesh`</span>
+<span class="sd">    to calculcate skeleton on all components of mesh, with no post processing &quot;&quot;&quot;</span>
+    <span class="c1"># find all the connected components in the mesh</span>
+    <span class="n">n_components</span><span class="p">,</span> <span class="n">labels</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csgraph</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">csgraph</span><span class="p">,</span>
+                                                               <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                                               <span class="n">return_labels</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">comp_labels</span><span class="p">,</span> <span class="n">comp_counts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">labels</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_map</span><span class="p">:</span>
+        <span class="n">mesh_to_skeleton_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+    <span class="c1"># variables to collect the paths, roots and path lengths</span>
+    <span class="n">all_paths</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">roots</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">tot_path_lengths</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">if</span> <span class="n">soma_pt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        
+        <span class="n">soma_d</span> <span class="o">=</span> <span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span> <span class="o">-</span> <span class="n">soma_pt</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">soma_d</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">soma_d</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">is_soma_pt</span> <span class="o">=</span> <span class="n">soma_d</span> <span class="o">&lt;</span> <span class="n">soma_thresh</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">is_soma_pt</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">soma_d</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># loop over the components</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">trange</span><span class="p">(</span><span class="n">n_components</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">comp_counts</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">cc_vertex_thresh</span><span class="p">:</span>
+
+            <span class="c1"># find the root using a soma position if you have it</span>
+            <span class="c1"># it will fall back to a heuristic if the soma</span>
+            <span class="c1"># is too far away for this component</span>
+            <span class="n">root</span><span class="p">,</span> <span class="n">root_ds</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="n">valid</span> <span class="o">=</span> <span class="n">setup_root</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span>
+                                                    <span class="n">is_soma_pt</span><span class="p">,</span>
+                                                    <span class="n">soma_d</span><span class="p">,</span>
+                                                    <span class="n">labels</span> <span class="o">==</span> <span class="n">k</span><span class="p">)</span>
+            
+            <span class="c1"># run teasar on this component</span>
+            <span class="n">teasar_output</span> <span class="o">=</span> <span class="n">mesh_teasar</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span>
+                                        <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+                                        <span class="n">root_ds</span><span class="o">=</span><span class="n">root_ds</span><span class="p">,</span>
+                                        <span class="n">root_pred</span><span class="o">=</span><span class="n">pred</span><span class="p">,</span>
+                                        <span class="n">valid</span><span class="o">=</span><span class="n">valid</span><span class="p">,</span>
+                                        <span class="n">invalidation_d</span><span class="o">=</span><span class="n">invalidation_d</span><span class="p">,</span>
+                                        <span class="n">return_map</span><span class="o">=</span><span class="n">return_map</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">return_map</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+                <span class="n">paths</span><span class="p">,</span> <span class="n">path_lengths</span> <span class="o">=</span> <span class="n">teasar_output</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">paths</span><span class="p">,</span> <span class="n">path_lengths</span><span class="p">,</span> <span class="n">mesh_to_skeleton_map_single</span> <span class="o">=</span> <span class="n">teasar_output</span>
+                <span class="n">mesh_to_skeleton_map</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span>
+                    <span class="n">mesh_to_skeleton_map_single</span><span class="p">)]</span> <span class="o">=</span> <span class="n">mesh_to_skeleton_map_single</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">mesh_to_skeleton_map_single</span><span class="p">)]</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">path_lengths</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="c1"># collect the results in lists</span>
+                <span class="n">tot_path_lengths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path_lengths</span><span class="p">)</span>
+                <span class="n">all_paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">paths</span><span class="p">)</span>
+                <span class="n">roots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">root</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_map</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">all_paths</span><span class="p">,</span> <span class="n">roots</span><span class="p">,</span> <span class="n">tot_path_lengths</span><span class="p">,</span> <span class="n">mesh_to_skeleton_map</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">all_paths</span><span class="p">,</span> <span class="n">roots</span><span class="p">,</span> <span class="n">tot_path_lengths</span></div>
+
+
+<div class="viewcode-block" id="setup_root"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.setup_root">[docs]</a><span class="k">def</span> <span class="nf">setup_root</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">is_soma_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">soma_d</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">is_valid</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; function to find the root index to use for this mesh &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">is_valid</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">is_valid</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+    <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">valid</span><span class="p">)</span> <span class="o">==</span> <span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">root</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="c1"># soma mode</span>
+    <span class="k">if</span> <span class="n">is_soma_pt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># pick the first soma as root</span>
+        <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">soma_d</span><span class="p">)</span> <span class="o">==</span> <span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">assert</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">is_soma_pt</span><span class="p">)</span> <span class="o">==</span> <span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">is_valid_root</span> <span class="o">=</span> <span class="n">is_soma_pt</span> <span class="o">&amp;</span> <span class="n">valid</span>
+        <span class="n">valid_root_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">is_valid_root</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">valid_root_inds</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">min_valid_root</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanargmin</span><span class="p">(</span><span class="n">soma_d</span><span class="p">[</span><span class="n">valid_root_inds</span><span class="p">])</span>
+            <span class="n">root</span> <span class="o">=</span> <span class="n">valid_root_inds</span><span class="p">[</span><span class="n">min_valid_root</span><span class="p">]</span>
+            <span class="n">root_ds</span><span class="p">,</span> <span class="n">pred</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csgraph</span><span class="o">.</span><span class="n">dijkstra</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">csgraph</span><span class="p">,</span>
+                                                    <span class="n">directed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                                    <span class="n">indices</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+                                                    <span class="n">return_predecessors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">start_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">valid</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">root</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">root_ds</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">find_far_points</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span>
+                                                                    <span class="n">start_ind</span><span class="o">=</span><span class="n">start_ind</span><span class="p">)</span>
+        <span class="n">valid</span><span class="p">[</span><span class="n">is_soma_pt</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># there is no soma close, so use far point heuristic</span>
+        <span class="n">start_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">valid</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">root</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="n">dm</span><span class="p">,</span> <span class="n">root_ds</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">find_far_points</span><span class="p">(</span>
+            <span class="n">mesh</span><span class="p">,</span> <span class="n">start_ind</span><span class="o">=</span><span class="n">start_ind</span><span class="p">)</span>
+    <span class="n">valid</span><span class="p">[</span><span class="n">root</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">assert</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">root_ds</span><span class="p">[</span><span class="n">valid</span><span class="p">])))</span>
+    <span class="k">return</span> <span class="n">root</span><span class="p">,</span> <span class="n">root_ds</span><span class="p">,</span> <span class="n">pred</span><span class="p">,</span> <span class="n">valid</span></div>
+
+
+<div class="viewcode-block" id="mesh_teasar"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.mesh_teasar">[docs]</a><span class="k">def</span> <span class="nf">mesh_teasar</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">valid</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">root_ds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">root_pred</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">soma_pt</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                <span class="n">soma_thresh</span><span class="o">=</span><span class="mi">7500</span><span class="p">,</span> <span class="n">invalidation_d</span><span class="o">=</span><span class="mi">10000</span><span class="p">,</span> <span class="n">return_timing</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">return_map</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;core skeletonization function used to skeletonize a single component of a mesh&quot;&quot;&quot;</span>
+    <span class="c1"># if no root passed, then calculation one</span>
+    <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">root</span><span class="p">,</span> <span class="n">root_ds</span><span class="p">,</span> <span class="n">root_pred</span><span class="p">,</span> <span class="n">valid</span> <span class="o">=</span> <span class="n">setup_root</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span>
+                                                     <span class="n">soma_pt</span><span class="o">=</span><span class="n">soma_pt</span><span class="p">,</span>
+                                                     <span class="n">soma_thresh</span><span class="o">=</span><span class="n">soma_thresh</span><span class="p">)</span>
+    <span class="c1"># if root_ds have not be precalculated do so</span>
+    <span class="k">if</span> <span class="n">root_ds</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">root_ds</span><span class="p">,</span> <span class="n">root_pred</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csgraph</span><span class="o">.</span><span class="n">dijkstra</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">csgraph</span><span class="p">,</span>
+                                                     <span class="kc">False</span><span class="p">,</span>
+                                                     <span class="n">root</span><span class="p">,</span>
+                                                     <span class="n">return_predecessors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># if certain vertices haven&#39;t been pre-invalidated start with just</span>
+    <span class="c1"># the root vertex invalidated</span>
+    <span class="k">if</span> <span class="n">valid</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">valid</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+        <span class="n">valid</span><span class="p">[</span><span class="n">root</span><span class="p">]</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">valid</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;valid must be length of vertices&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">return_map</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">mesh_to_skeleton_dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="n">mesh_to_skeleton_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+    <span class="n">total_to_visit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">valid</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">root_ds</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">valid</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">root_ds</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">valid</span><span class="p">))</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;all valid vertices should be reachable from root&quot;</span><span class="p">)</span>
+
+    <span class="c1"># vector to store each branch result</span>
+    <span class="n">paths</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># vector to store each path&#39;s total length</span>
+    <span class="n">path_lengths</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="c1"># keep track of the nodes that have been visited</span>
+    <span class="n">visited_nodes</span> <span class="o">=</span> <span class="p">[</span><span class="n">root</span><span class="p">]</span>
+
+    <span class="c1"># counter to track how many branches have been counted</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="c1"># arrays to track timing</span>
+    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">time_arrays</span> <span class="o">=</span> <span class="p">[[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[],</span> <span class="p">[]]</span>
+
+    <span class="k">with</span> <span class="n">tqdm</span><span class="p">(</span><span class="n">total</span><span class="o">=</span><span class="n">total_to_visit</span><span class="p">)</span> <span class="k">as</span> <span class="n">pbar</span><span class="p">:</span>
+        <span class="c1"># keep looping till all vertices have been invalidated</span>
+        <span class="k">while</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">valid</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="n">k</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="c1"># find the next target, farthest vertex from root</span>
+            <span class="c1"># that has not been invalidated</span>
+            <span class="n">target</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nanargmax</span><span class="p">(</span><span class="n">root_ds</span><span class="o">*</span><span class="n">valid</span><span class="p">)</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">root_ds</span><span class="p">[</span><span class="n">target</span><span class="p">])):</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s1">&#39;target cannot be reached&#39;</span><span class="p">)</span>
+            <span class="n">time_arrays</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t</span><span class="p">)</span>
+
+            <span class="n">t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="c1"># figure out the longest this branch could be</span>
+            <span class="c1"># by following the route from target to the root</span>
+            <span class="c1"># and finding the first already visited node (max_branch)</span>
+            <span class="c1"># The dist(root-&gt;target) - dist(root-&gt;max_branch)</span>
+            <span class="c1"># is the maximum distance the shortest route to a branch</span>
+            <span class="c1"># point from the target could possibly be,</span>
+            <span class="c1"># use this bound to reduce the djisktra search radius for this target</span>
+            <span class="n">max_branch</span> <span class="o">=</span> <span class="n">target</span>
+            <span class="k">while</span> <span class="n">max_branch</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">visited_nodes</span><span class="p">:</span>
+                <span class="n">max_branch</span> <span class="o">=</span> <span class="n">root_pred</span><span class="p">[</span><span class="n">max_branch</span><span class="p">]</span>
+            <span class="n">max_path_length</span> <span class="o">=</span> <span class="n">root_ds</span><span class="p">[</span><span class="n">target</span><span class="p">]</span><span class="o">-</span><span class="n">root_ds</span><span class="p">[</span><span class="n">max_branch</span><span class="p">]</span>
+
+            <span class="c1"># calculate the shortest path to that vertex</span>
+            <span class="c1"># from all other vertices</span>
+            <span class="c1"># up till the distance to the root</span>
+            <span class="n">ds</span><span class="p">,</span> <span class="n">pred_t</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csgraph</span><span class="o">.</span><span class="n">dijkstra</span><span class="p">(</span>
+                <span class="n">mesh</span><span class="o">.</span><span class="n">csgraph</span><span class="p">,</span>
+                <span class="kc">False</span><span class="p">,</span>
+                <span class="n">target</span><span class="p">,</span>
+                <span class="n">limit</span><span class="o">=</span><span class="n">max_path_length</span><span class="p">,</span>
+                <span class="n">return_predecessors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># pick out the vertex that has already been visited</span>
+            <span class="c1"># which has the shortest path to target</span>
+            <span class="n">min_node</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">visited_nodes</span><span class="p">])</span>
+            <span class="c1"># reindex to get its absolute index</span>
+            <span class="n">branch</span> <span class="o">=</span> <span class="n">visited_nodes</span><span class="p">[</span><span class="n">min_node</span><span class="p">]</span>
+            <span class="c1"># this is in the index of the point on the skeleton</span>
+            <span class="c1"># we want this branch to connect to</span>
+            <span class="n">time_arrays</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t</span><span class="p">)</span>
+
+            <span class="n">t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="c1"># get the path from the target to branch point</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_path</span><span class="p">(</span><span class="n">target</span><span class="p">,</span> <span class="n">branch</span><span class="p">,</span> <span class="n">pred_t</span><span class="p">)</span>
+            <span class="n">visited_nodes</span> <span class="o">+=</span> <span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># record its length</span>
+            <span class="k">assert</span><span class="p">(</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">branch</span><span class="p">]))</span>
+            <span class="n">path_lengths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ds</span><span class="p">[</span><span class="n">branch</span><span class="p">])</span>
+            <span class="c1"># record the path</span>
+            <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+            <span class="n">time_arrays</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t</span><span class="p">)</span>
+
+            <span class="n">t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="c1"># get the distance to all points along the new path</span>
+            <span class="c1"># within the invalidation distance</span>
+            <span class="n">dm</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">sources</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csgraph</span><span class="o">.</span><span class="n">dijkstra</span><span class="p">(</span>
+                <span class="n">mesh</span><span class="o">.</span><span class="n">csgraph</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">invalidation_d</span><span class="p">,</span>
+                <span class="n">min_only</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_predecessors</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">time_arrays</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t</span><span class="p">)</span>
+
+            <span class="n">t</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+            <span class="c1"># all such non infinite distances are within the invalidation</span>
+            <span class="c1"># zone and should be marked invalid</span>
+            <span class="n">nodes_to_update</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">dm</span><span class="p">)</span>
+            <span class="n">marked</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">valid</span> <span class="o">&amp;</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">dm</span><span class="p">))</span>
+            <span class="k">if</span> <span class="n">return_map</span> <span class="o">==</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">new_sources_closer</span> <span class="o">=</span> <span class="n">dm</span><span class="p">[</span><span class="n">nodes_to_update</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">mesh_to_skeleton_dist</span><span class="p">[</span><span class="n">nodes_to_update</span><span class="p">]</span>
+                <span class="n">mesh_to_skeleton_map</span><span class="p">[</span><span class="n">nodes_to_update</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">new_sources_closer</span><span class="p">,</span>
+                                                                 <span class="n">sources</span><span class="p">[</span><span class="n">nodes_to_update</span><span class="p">],</span>
+                                                                 <span class="n">mesh_to_skeleton_map</span><span class="p">[</span><span class="n">nodes_to_update</span><span class="p">])</span>
+                <span class="n">mesh_to_skeleton_dist</span><span class="p">[</span><span class="n">nodes_to_update</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">new_sources_closer</span><span class="p">,</span>
+                                                                  <span class="n">dm</span><span class="p">[</span><span class="n">nodes_to_update</span><span class="p">],</span>
+                                                                  <span class="n">mesh_to_skeleton_dist</span><span class="p">[</span><span class="n">nodes_to_update</span><span class="p">])</span>
+
+            <span class="n">valid</span><span class="p">[</span><span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">dm</span><span class="p">)]</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="c1"># print out how many vertices are still valid</span>
+            <span class="n">pbar</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">marked</span><span class="p">)</span>
+            <span class="n">time_arrays</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t</span><span class="p">)</span>
+    <span class="c1"># record the total time</span>
+    <span class="n">dt</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+
+    <span class="n">out_tuple</span> <span class="o">=</span> <span class="p">(</span><span class="n">paths</span><span class="p">,</span> <span class="n">path_lengths</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">return_map</span><span class="p">:</span>
+        <span class="n">out_tuple</span> <span class="o">=</span> <span class="n">out_tuple</span> <span class="o">+</span> <span class="p">(</span><span class="n">mesh_to_skeleton_map</span><span class="p">,)</span>
+    <span class="k">if</span> <span class="n">return_timing</span><span class="p">:</span>
+        <span class="n">out_tuple</span> <span class="o">=</span> <span class="n">out_tuple</span> <span class="o">+</span> <span class="p">(</span><span class="n">time_arrays</span><span class="p">,</span> <span class="n">dt</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out_tuple</span></div>
+
+
+<div class="viewcode-block" id="smooth_graph"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.smooth_graph">[docs]</a><span class="k">def</span> <span class="nf">smooth_graph</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">neighborhood</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">iterations</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">r</span><span class="o">=</span><span class="mf">.1</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot; smooths a spatial graph via iterative local averaging</span>
+<span class="sd">        calculates the average value of neighboring values</span>
+<span class="sd">        and relaxes the values toward that average</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        values : numpy.array</span>
+<span class="sd">            a NxK numpy array of values, for example xyz positions</span>
+<span class="sd">        edges : numpy.array</span>
+<span class="sd">            a Mx2 numpy array of indices into values that are edges</span>
+<span class="sd">        mask : numpy.array</span>
+<span class="sd">            NOT yet implemented</span>
+<span class="sd">            optional N boolean vector of values to mask</span>
+<span class="sd">            the vert locations.  the result will return a result at every vert</span>
+<span class="sd">            but the values that are false in this mask will be ignored and not</span>
+<span class="sd">            factored into the smoothing.</span>
+<span class="sd">        neighborhood : int</span>
+<span class="sd">            an integer of how far in the graph to relax over</span>
+<span class="sd">            as being local to any vertex (default = 2)</span>
+<span class="sd">        iterations : int</span>
+<span class="sd">            number of relaxation iterations (default = 100)</span>
+<span class="sd">        r : float</span>
+<span class="sd">            relaxation factor at each iteration</span>
+<span class="sd">            new_vertex = (1-r)*old_vertex*mask + (r+(1-r)*(1-mask))*(local_avg)</span>
+<span class="sd">            default = .1</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        np.array</span>
+<span class="sd">            new_verts, a Nx3 list of new smoothed vertex positions</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+
+    <span class="c1"># setup a sparse matrix with the edges</span>
+    <span class="n">sm</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span>
+        <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">E</span><span class="p">),</span> <span class="p">(</span><span class="n">edges</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">edges</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+
+    <span class="c1"># an identity matrix</span>
+    <span class="n">eye</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">),</span>
+                             <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">N</span><span class="p">))),</span>
+                            <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span>
+    <span class="c1"># for undirected graphs we want it symettric</span>
+    <span class="n">sm</span> <span class="o">=</span> <span class="n">sm</span> <span class="o">+</span> <span class="n">sm</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="c1"># this will store our relaxation matrix</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csc_matrix</span><span class="p">(</span><span class="n">eye</span><span class="p">)</span>
+    <span class="c1"># multiple the matrix and add to itself</span>
+    <span class="c1"># to spread connectivity along the graph</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">neighborhood</span><span class="p">):</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">C</span> <span class="o">+</span> <span class="n">sm</span> <span class="o">@</span> <span class="n">C</span>
+    <span class="c1"># zero out the diagonal elements</span>
+    <span class="n">C</span><span class="o">.</span><span class="n">setdiag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">))</span>
+    <span class="c1"># don&#39;t overweight things that are connected in more than one way</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">sign</span><span class="p">()</span>
+    <span class="c1"># measure total effective neighbors per node</span>
+    <span class="n">neighbors</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="c1"># normalize the weights of neighbors according to number of neighbors</span>
+    <span class="n">neighbors</span> <span class="o">=</span> <span class="mi">1</span><span class="o">/</span><span class="n">neighbors</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">multiply</span><span class="p">(</span><span class="n">neighbors</span><span class="p">)</span>
+    <span class="c1"># convert back to csc</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">C</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span>
+
+    <span class="c1"># multiply weights by relaxation term</span>
+    <span class="n">C</span> <span class="o">*=</span> <span class="n">r</span>
+
+    <span class="c1"># construct relaxation matrix, adding on identity with complementary weight</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">C</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="o">-</span><span class="n">r</span><span class="p">)</span><span class="o">*</span><span class="n">eye</span>
+
+    <span class="c1"># make a copy of original vertices to no destroy inpuyt</span>
+    <span class="n">new_values</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">values</span><span class="p">)</span>
+
+    <span class="c1"># iteratively relax the vertices</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">iterations</span><span class="p">):</span>
+        <span class="n">new_values</span> <span class="o">=</span> <span class="n">A</span><span class="o">*</span><span class="n">new_values</span>
+    <span class="k">return</span> <span class="n">new_values</span></div>
+
+
+<div class="viewcode-block" id="collapse_soma_skeleton"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.collapse_soma_skeleton">[docs]</a><span class="k">def</span> <span class="nf">collapse_soma_skeleton</span><span class="p">(</span><span class="n">soma_pt</span><span class="p">,</span> <span class="n">verts</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">soma_d_thresh</span><span class="o">=</span><span class="mi">12000</span><span class="p">,</span> <span class="n">mesh_to_skeleton_map</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                           <span class="n">soma_mesh_indices</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">return_filter</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">only_soma_component</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">return_soma_ind</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;function to adjust skeleton result to move root to soma_pt </span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    soma_pt : numpy.array</span>
+<span class="sd">        a 3 long vector of xyz locations of the soma (None to just remove duplicate )</span>
+<span class="sd">    verts : numpy.array</span>
+<span class="sd">        a Nx3 array of xyz vertex locations</span>
+<span class="sd">    edges : numpy.array</span>
+<span class="sd">        a Kx2 array of edges of the skeleton</span>
+<span class="sd">    soma_d_thresh : float</span>
+<span class="sd">        distance from soma_pt to collapse skeleton nodes</span>
+<span class="sd">    mesh_to_skeleton_map : np.array</span>
+<span class="sd">        a M long array of how each mesh index maps to a skeleton vertex</span>
+<span class="sd">        (default None).  The function will update this as it collapses vertices to root.</span>
+<span class="sd">    soma_mesh_indices : np.array</span>
+<span class="sd">         a K long array of indices in the mesh that should be considered soma</span>
+<span class="sd">         Any  skeleton vertex on these vertices will all be collapsed to root.</span>
+<span class="sd">    return_filter : bool</span>
+<span class="sd">        whether to return a list of which skeleton vertices were used in the end</span>
+<span class="sd">        for the reduced set of skeleton vertices</span>
+<span class="sd">    only_soma_component : bool</span>
+<span class="sd">        whether to collapse only the skeleton connected component which is closest to the soma_pt</span>
+<span class="sd">        (default True)</span>
+<span class="sd">    return_soma_ind : bool</span>
+<span class="sd">        whether to return which skeleton index that is the soma_pt</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.array</span>
+<span class="sd">        verts, Px3 array of xyz skeleton vertices</span>
+<span class="sd">    np.array</span>
+<span class="sd">        edges, Qx2 array of skeleton edges</span>
+<span class="sd">    (np.array)</span>
+<span class="sd">        new_mesh_to_skeleton_map, returned if mesh_to_skeleton_map and soma_pt passed </span>
+<span class="sd">    (np.array)</span>
+<span class="sd">        used_vertices, if return_filter this contains the indices into the passed verts which the return verts is using</span>
+<span class="sd">    int</span>
+<span class="sd">        an index into the returned verts that is the root of the skeleton node, only returned if return_soma_ind is True</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">soma_pt</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">only_soma_component</span><span class="p">:</span>
+            <span class="n">closest_soma_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">verts</span><span class="o">-</span><span class="n">soma_pt</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">))</span>
+            <span class="n">close_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">verts</span><span class="o">-</span><span class="n">soma_pt</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">soma_d_thresh</span>
+            <span class="n">orig_graph</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">create_csgraph</span><span class="p">(</span>
+                <span class="n">verts</span><span class="p">,</span> <span class="n">edges</span><span class="p">,</span> <span class="n">euclidean_weight</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">speye</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">diags</span><span class="p">(</span><span class="n">close_inds</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">int</span><span class="p">))</span>
+            <span class="n">_</span><span class="p">,</span> <span class="n">compids</span> <span class="o">=</span> <span class="n">sparse</span><span class="o">.</span><span class="n">csgraph</span><span class="o">.</span><span class="n">connected_components</span><span class="p">(</span>
+                <span class="n">orig_graph</span> <span class="o">*</span> <span class="n">speye</span><span class="p">)</span>
+            <span class="n">soma_verts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flatnonzero</span><span class="p">(</span><span class="n">compids</span><span class="p">[</span><span class="n">closest_soma_ind</span><span class="p">]</span> <span class="o">==</span> <span class="n">compids</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">dv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">verts</span> <span class="o">-</span> <span class="n">soma_pt_m</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">soma_verts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">dv</span> <span class="o">&lt;</span> <span class="n">soma_d_thresh</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">soma_pt_m</span> <span class="o">=</span> <span class="n">soma_pt</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">new_verts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">verts</span><span class="p">,</span> <span class="n">soma_pt_m</span><span class="p">))</span>
+        <span class="n">soma_i</span> <span class="o">=</span> <span class="n">verts</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">edges_m</span> <span class="o">=</span> <span class="n">edges</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">edges_m</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">edges</span><span class="p">,</span> <span class="n">soma_verts</span><span class="p">)]</span> <span class="o">=</span> <span class="n">soma_i</span>
+
+        <span class="n">simple_verts</span><span class="p">,</span> <span class="n">simple_edges</span> <span class="o">=</span> <span class="n">trimesh_vtk</span><span class="o">.</span><span class="n">remove_unused_verts</span><span class="p">(</span>
+            <span class="n">new_verts</span><span class="p">,</span> <span class="n">edges_m</span><span class="p">)</span>
+        <span class="n">good_edges</span> <span class="o">=</span> <span class="o">~</span><span class="p">(</span><span class="n">simple_edges</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">simple_edges</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">mesh_to_skeleton_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">new_mesh_to_skeleton_map</span> <span class="o">=</span> <span class="n">mesh_to_skeleton_map</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+            <span class="n">remap_rows</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">mesh_to_skeleton_map</span><span class="p">,</span> <span class="n">soma_verts</span><span class="p">)</span>
+            <span class="n">new_mesh_to_skeleton_map</span><span class="p">[</span><span class="n">remap_rows</span><span class="p">]</span> <span class="o">=</span> <span class="n">soma_i</span>
+            <span class="n">new_mesh_to_skeleton_map</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">nanfilter_shapes</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">edges_m</span><span class="o">.</span><span class="n">ravel</span><span class="p">()),</span>
+                                                              <span class="n">new_mesh_to_skeleton_map</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">soma_mesh_indices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">new_mesh_to_skeleton_map</span><span class="p">[</span><span class="n">soma_mesh_indices</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span>
+                    <span class="n">simple_verts</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[</span><span class="n">simple_verts</span><span class="p">,</span> <span class="n">simple_edges</span><span class="p">[</span><span class="n">good_edges</span><span class="p">]]</span>
+        <span class="k">if</span> <span class="n">mesh_to_skeleton_map</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_mesh_to_skeleton_map</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">return_filter</span><span class="p">:</span>
+            <span class="c1"># Remove the largest value which is soma_i</span>
+            <span class="n">used_vertices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">edges_m</span><span class="o">.</span><span class="n">ravel</span><span class="p">())[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">used_vertices</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">return_soma_ind</span><span class="p">:</span>
+            <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">simple_verts</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">simple_verts</span><span class="p">,</span> <span class="n">simple_edges</span> <span class="o">=</span> <span class="n">trimesh_vtk</span><span class="o">.</span><span class="n">remove_unused_verts</span><span class="p">(</span>
+            <span class="n">verts</span><span class="p">,</span> <span class="n">edges</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">simple_verts</span><span class="p">,</span> <span class="n">simple_edges</span></div>
+
+
+<div class="viewcode-block" id="ray_trace_distance"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.ray_trace_distance">[docs]</a><span class="k">def</span> <span class="nf">ray_trace_distance</span><span class="p">(</span><span class="n">vertex_inds</span><span class="p">,</span> <span class="n">mesh</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">rand_jitter</span><span class="o">=</span><span class="mf">0.001</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">ray_inter</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Compute distance to opposite side of the mesh for specified vertex indices on the mesh.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vertex_inds : np.array</span>
+<span class="sd">        a K long set of indices into the mesh.vertices that you want to perform ray tracing on</span>
+<span class="sd">    mesh : :obj:`meshparty.trimesh_io.Mesh`</span>
+<span class="sd">        mesh to perform ray tracing on</span>
+<span class="sd">    max_iter : int</span>
+<span class="sd">        maximum retries to attempt in order to get a proper sdf measure (default 10)</span>
+<span class="sd">    rand_jitter : float</span>
+<span class="sd">        the amplitude of gaussian jitter on the vertex normal to add on each iteration (default .001)</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        whether to print debug statements (default False)</span>
+<span class="sd">    ray_inter: ray_pyembree.RayMeshIntersector</span>
+<span class="sd">        a ray intercept object pre-initialized with a mesh, in case y ou are doing this many times</span>
+<span class="sd">        and want to avoid paying initialization costs. (default None) will initialize it for you</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    np.array</span>
+<span class="sd">        rs, a K long array of sdf values. rays with no result after max_iters will contain zeros.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">trimesh</span><span class="o">.</span><span class="n">ray</span><span class="o">.</span><span class="n">has_embree</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;calculating rays without pyembree, conda install pyembree for large speedup&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">ray_inter</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">ray_inter</span> <span class="o">=</span> <span class="n">ray_pyembree</span><span class="o">.</span><span class="n">RayMeshIntersector</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
+
+    <span class="n">rs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vertex_inds</span><span class="p">))</span>
+    <span class="n">good_rs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rs</span><span class="p">),</span> <span class="kc">False</span><span class="p">)</span>
+
+    <span class="n">it</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">good_rs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="o">~</span><span class="n">good_rs</span><span class="p">))</span>
+        <span class="n">blank_inds</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="o">~</span><span class="n">good_rs</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">starts</span> <span class="o">=</span> <span class="p">(</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span> <span class="o">-</span>
+                  <span class="n">mesh</span><span class="o">.</span><span class="n">vertex_normals</span><span class="p">)[</span><span class="n">vertex_inds</span><span class="p">,</span> <span class="p">:][</span><span class="o">~</span><span class="n">good_rs</span><span class="p">,</span> <span class="p">:]</span>
+        <span class="n">vs</span> <span class="o">=</span> <span class="o">-</span><span class="n">mesh</span><span class="o">.</span><span class="n">vertex_normals</span><span class="p">[</span><span class="n">vertex_inds</span><span class="p">,</span> <span class="p">:]</span> \
+            <span class="o">+</span> <span class="p">(</span><span class="mf">1.2</span><span class="o">**</span><span class="n">it</span><span class="p">)</span><span class="o">*</span><span class="n">rand_jitter</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="o">*</span>
+                                                   <span class="n">mesh</span><span class="o">.</span><span class="n">vertex_normals</span><span class="p">[</span><span class="n">vertex_inds</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        <span class="n">vs</span> <span class="o">=</span> <span class="n">vs</span><span class="p">[</span><span class="o">~</span><span class="n">good_rs</span><span class="p">,</span> <span class="p">:]</span>
+
+        <span class="n">rtrace</span> <span class="o">=</span> <span class="n">ray_inter</span><span class="o">.</span><span class="n">intersects_location</span><span class="p">(</span><span class="n">starts</span><span class="p">,</span> <span class="n">vs</span><span class="p">,</span> <span class="n">multiple_hits</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">rtrace</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">):</span>
+            <span class="c1"># radius values</span>
+            <span class="n">rs</span><span class="p">[</span><span class="n">blank_inds</span><span class="p">[</span><span class="n">rtrace</span><span class="p">[</span><span class="mi">1</span><span class="p">]]]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+                <span class="n">mesh</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="n">vertex_inds</span><span class="p">,</span> <span class="p">:][</span><span class="n">rtrace</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span><span class="o">-</span><span class="n">rtrace</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">good_rs</span><span class="p">[</span><span class="n">blank_inds</span><span class="p">[</span><span class="n">rtrace</span><span class="p">[</span><span class="mi">1</span><span class="p">]]]</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">it</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">it</span> <span class="o">&gt;</span> <span class="n">max_iter</span><span class="p">:</span>
+            <span class="k">break</span>
+    <span class="k">return</span> <span class="n">rs</span></div>
+
+<span class="c1"># ================= 10/12 added skeletonization for decomposition=================================== #</span>
+
+
+<span class="n">invalidation_d_default</span> <span class="o">=</span> <span class="mi">12000</span>
+<span class="n">smooth_neighborhood_default</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">meshparty_segment_size_global</span> <span class="o">=</span> <span class="mi">100</span>
+<span class="n">combine_close_skeleton_nodes_threshold_global</span> <span class="o">=</span> <span class="mi">700</span>
+<span class="n">filter_end_node_length_global</span> <span class="o">=</span> <span class="mi">4000</span>
+<span class="n">filter_end_nodes_global</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="skeletonize_mesh_largest_component"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.skeletonize_mesh_largest_component">[docs]</a><span class="k">def</span> <span class="nf">skeletonize_mesh_largest_component</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span>
+                                    <span class="n">root</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                                      <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                      <span class="n">filter_mesh</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="c1">#will filter the mesh for just one connected piece</span>
+                                      <span class="n">invalidation_d</span><span class="o">=</span><span class="n">invalidation_d_default</span><span class="p">,</span>
+                                       <span class="n">smooth_neighborhood</span><span class="o">=</span><span class="n">smooth_neighborhood_default</span><span class="p">,</span>
+                                      <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span><span class="c1">#was 12000</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    To run the skeletonization on the </span>
+<span class="sd">    largest connected component of one mesh</span>
+<span class="sd">    </span>
+<span class="sd">    Example 1:</span>
+<span class="sd">    #How to get the skeleton from the skeleton object</span>
+<span class="sd">    sk_meshparty = sk_meshparty_obj.vertices[sk_meshparty_obj.edges]</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;invalidation_d = </span><span class="si">{</span><span class="n">invalidation_d</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="n">limb_mesh_mparty</span> <span class="o">=</span> <span class="n">deepcopy</span><span class="p">(</span><span class="n">mesh</span><span class="p">)</span>
+
+<span class="c1">#     # just getting the largest connected component</span>
+<span class="c1">#     connect_comp = list(nx.connected_components(nx.from_edgelist(limb_mesh_mparty.face_adjacency)))</span>
+<span class="c1">#     max_connect_comp = np.argmax([len(k) for k in connect_comp])</span>
+<span class="c1">#     limb_mesh_mparty = limb_mesh_mparty.submesh([list(connect_comp[max_connect_comp])],append=True)</span>
+    <span class="k">if</span> <span class="n">filter_mesh</span><span class="p">:</span>
+        <span class="n">limb_mesh_mparty</span> <span class="o">=</span> <span class="n">limb_mesh_mparty</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">only_watertight</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span><span class="n">repair</span><span class="o">=</span><span class="kc">False</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="n">limb_obj_tr_io</span>  <span class="o">=</span> <span class="n">trimesh_io</span><span class="o">.</span><span class="n">Mesh</span><span class="p">(</span><span class="n">vertices</span> <span class="o">=</span> <span class="n">limb_mesh_mparty</span><span class="o">.</span><span class="n">vertices</span><span class="p">,</span>
+                                                           <span class="n">faces</span> <span class="o">=</span> <span class="n">limb_mesh_mparty</span><span class="o">.</span><span class="n">faces</span><span class="p">,</span>
+                                                           <span class="n">normals</span><span class="o">=</span><span class="n">limb_mesh_mparty</span><span class="o">.</span><span class="n">face_normals</span><span class="p">)</span>
+
+    <span class="n">meshparty_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Step 1: Starting Meshparty Skeletonization (invalidation_d = </span><span class="si">{</span><span class="n">invalidation_d</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">)</span>
+    <span class="n">sk_meshparty_obj</span><span class="p">,</span> <span class="n">v</span> <span class="o">=</span> <span class="n">skeletonize_mesh</span><span class="p">(</span><span class="n">limb_obj_tr_io</span><span class="p">,</span>
+                          <span class="n">soma_pt</span> <span class="o">=</span> <span class="n">root</span><span class="p">,</span>
+                          <span class="n">soma_radius</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                          <span class="n">collapse_soma</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                          <span class="n">invalidation_d</span><span class="o">=</span><span class="n">invalidation_d</span><span class="p">,</span><span class="c1">#12000,</span>
+                          <span class="n">smooth_vertices</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                           <span class="n">smooth_neighborhood</span> <span class="o">=</span> <span class="n">smooth_neighborhood</span><span class="p">,</span>
+                          <span class="n">compute_radius</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="c1">#Need the pyembree list</span>
+                          <span class="n">compute_original_index</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                          <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total time for meshParty skeletonization = </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">meshparty_time</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">filter_mesh</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sk_meshparty_obj</span><span class="p">,</span><span class="n">limb_mesh_mparty</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sk_meshparty_obj</span></div>
+
+
+
+<div class="viewcode-block" id="skeleton_obj_to_branches"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.skeleton_obj_to_branches">[docs]</a><span class="k">def</span> <span class="nf">skeleton_obj_to_branches</span><span class="p">(</span><span class="n">sk_meshparty_obj</span><span class="p">,</span>
+                             <span class="n">mesh</span><span class="p">,</span>
+                            <span class="n">meshparty_n_surface_downsampling</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+                            <span class="n">meshparty_segment_size</span> <span class="o">=</span> <span class="mi">100</span><span class="p">,</span>
+                            <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                             <span class="n">filter_end_nodes</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+                             <span class="n">filter_end_node_length</span><span class="o">=</span><span class="mi">4500</span><span class="p">,</span>
+                             <span class="n">combine_close_skeleton_nodes_threshold</span> <span class="o">=</span> <span class="mi">700</span><span class="p">,</span>
+                             <span class="n">return_skeleton_only</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                             <span class="o">**</span><span class="n">kwargs</span>
+                             
+                            <span class="p">):</span>
+    <span class="c1">#print(f&quot;*** combine_close_skeleton_nodes_threshold = {combine_close_skeleton_nodes_threshold}***&quot; )</span>
+    
+    <span class="n">debug</span> <span class="o">=</span> <span class="kc">False</span>
+    
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;mesh = </span><span class="si">{</span><span class="n">mesh</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;meshparty_segment_size = </span><span class="si">{</span><span class="n">meshparty_segment_size</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;meshparty_n_surface_downsampling = </span><span class="si">{</span><span class="n">meshparty_n_surface_downsampling</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+
+    <span class="n">limb_mesh_mparty</span> <span class="o">=</span> <span class="n">mesh</span>
+    <span class="c1">#Step 2: Getting the branches</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Step 2: Decomposing Branches&quot;</span><span class="p">)</span>
+    <span class="n">meshparty_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="n">segments</span><span class="p">,</span> <span class="n">segment_maps</span> <span class="o">=</span> <span class="n">compute_segments</span><span class="p">(</span><span class="n">sk_meshparty_obj</span><span class="p">)</span>
+    <span class="c1"># getting the skeletons that go with them</span>
+    <span class="n">segment_branches</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">sk_meshparty_obj</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">k</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">:]])</span><span class="o">.</span><span class="n">T</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">])</span>
+    
+    <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;segments = </span><span class="si">{</span><span class="n">segments</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;segment_branches = </span><span class="si">{</span><span class="n">segment_branches</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+    
+    <span class="n">branches_touching_root</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">find_branch_skeleton_with_specific_coordinate</span><span class="p">(</span><span class="n">segment_branches</span><span class="p">,</span>
+                                        <span class="n">current_coordinate</span><span class="o">=</span><span class="n">sk_meshparty_obj</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="n">sk_meshparty_obj</span><span class="o">.</span><span class="n">root</span><span class="p">])</span>
+    
+    
+    
+    <span class="c1">#combine segments that are connected at the root if there are only 2</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">branches_touching_root</span><span class="p">)</span> <span class="o">==</span><span class="mi">2</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;connecting at the root&quot;</span><span class="p">)</span>
+        <span class="n">keep_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">)),</span><span class="n">branches_touching_root</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;int&quot;</span><span class="p">)</span>
+        
+        <span class="c1">#calculating the new segment</span>
+        <span class="n">b_touch_seg_1</span> <span class="o">=</span> <span class="n">segments</span><span class="p">[</span><span class="n">branches_touching_root</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+        <span class="n">b_touch_seg_2</span> <span class="o">=</span> <span class="n">segments</span><span class="p">[</span><span class="n">branches_touching_root</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+
+        <span class="n">b_touch_seg_1_ends</span> <span class="o">=</span> <span class="n">b_touch_seg_1</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">b_touch_seg_2_ends</span> <span class="o">=</span> <span class="n">b_touch_seg_2</span><span class="p">[[</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="n">b_1_root_end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">b_touch_seg_1_ends</span> <span class="o">==</span> <span class="n">sk_meshparty_obj</span><span class="o">.</span><span class="n">root</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">b_2_root_end</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">b_touch_seg_2_ends</span> <span class="o">==</span> <span class="n">sk_meshparty_obj</span><span class="o">.</span><span class="n">root</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">b_1_root_end</span><span class="p">,</span><span class="n">b_2_root_end</span>
+
+        <span class="k">if</span> <span class="n">b_1_root_end</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">b_touch_seg_1</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">b_touch_seg_1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">b_2_root_end</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">b_touch_seg_2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">flip</span><span class="p">(</span><span class="n">b_touch_seg_2</span><span class="p">)</span>
+            
+        <span class="n">new_seg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">b_touch_seg_1</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">b_touch_seg_2</span><span class="p">])</span>
+        
+        
+        <span class="c1">#adding the new segment to the older segments</span>
+        <span class="n">new_segments</span> <span class="o">=</span> <span class="p">[</span><span class="n">segments</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">keep_ind</span><span class="p">]</span>
+        <span class="n">new_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">new_seg</span><span class="p">)</span>
+        
+        <span class="n">new_segment_branches</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">sk_meshparty_obj</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">k</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span><span class="n">k</span><span class="p">[</span><span class="mi">1</span><span class="p">:]])</span><span class="o">.</span><span class="n">T</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">new_segments</span><span class="p">])</span>
+        
+        <span class="n">segments</span> <span class="o">=</span> <span class="n">new_segments</span>
+        <span class="n">segment_branches</span> <span class="o">=</span> <span class="n">new_segment_branches</span>
+        
+    <span class="n">branches_touching_root</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">find_branch_skeleton_with_specific_coordinate</span><span class="p">(</span><span class="n">segment_branches</span><span class="p">,</span>
+                                        <span class="n">current_coordinate</span><span class="o">=</span><span class="n">sk_meshparty_obj</span><span class="o">.</span><span class="n">vertices</span><span class="p">[</span><span class="n">sk_meshparty_obj</span><span class="o">.</span><span class="n">root</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;branches_touching_root = </span><span class="si">{</span><span class="n">branches_touching_root</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1">#raise Exception(&quot;&quot;)</span>
+        
+
+    <span class="c1">#------------ Add in the downsampling and resizing ----------------- #</span>
+
+
+    <span class="k">if</span> <span class="n">meshparty_n_surface_downsampling</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Going to downsample the meshparty segments </span><span class="si">{</span><span class="n">meshparty_n_surface_downsampling</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">segment_branches</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_surface_downsampling</span><span class="p">):</span>
+                <span class="n">s</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">downsample_skeleton</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+            <span class="n">segment_branches</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">s</span>
+
+    
+    <span class="k">if</span> <span class="n">meshparty_segment_size</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">new_segment_branches</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Resizing meshparty skeletal segments to length </span><span class="si">{</span><span class="n">meshparty_segment_size</span><span class="si">}</span><span class="s2"> nm&quot;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">s</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">segment_branches</span><span class="p">):</span>
+            <span class="n">new_segment_branches</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sk</span><span class="o">.</span><span class="n">resize_skeleton_branch</span><span class="p">(</span><span class="n">s</span><span class="p">,</span><span class="n">segment_width</span> <span class="o">=</span> <span class="n">meshparty_segment_size</span><span class="p">))</span>
+            
+        <span class="k">if</span> <span class="n">debug</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;new_segment_branches = </span><span class="si">{</span><span class="n">new_segment_branches</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">segment_branches</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">new_segment_branches</span><span class="p">)</span>
+
+    <span class="c1">#------------ END OF downsampling and resizing ----------------- #</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total time for meshParty decomposition = </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">meshparty_time</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+
+<span class="w">        </span>
+<span class="w">        </span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;OLD WAY </span>
+<span class="sd">    # -- Step 3: Creating the mesh correspondence --</span>
+<span class="sd">    </span>
+<span class="sd">    if not return_skeleton_only:</span>
+<span class="sd">        if verbose:</span>
+<span class="sd">            print(&quot;\nStep 3: Mesh correspondence&quot;)</span>
+<span class="sd">        meshparty_time = time.time()</span>
+
+<span class="sd">        sk_vertices_to_mesh_vertices = gu.invert_mapping(sk_meshparty_obj.mesh_to_skel_map)</span>
+<span class="sd">        #getting a list of all the original vertices that belong to each segment</span>
+<span class="sd">        segment_mesh_vertices = [np.unique(np.concatenate([sk_vertices_to_mesh_vertices[k] for k in segment_list])) for segment_list in segments]</span>
+<span class="sd">        #getting a list of all the original vertices that belong to each segment</span>
+<span class="sd">        segment_mesh_faces = [np.unique(limb_mesh_mparty.vertex_faces[k]) for k in segment_mesh_vertices]</span>
+<span class="sd">        segment_mesh_faces = [k[k&gt;=0] for k in segment_mesh_faces]</span>
+
+<span class="sd">        # --------------- 10/29: Adding in the part that combines the branch points that are close ----------- #</span>
+
+<span class="sd">        if combine_close_skeleton_nodes_threshold &gt; 0:</span>
+<span class="sd">            segment_branches_filtered,kept_branches_idx = sk.combine_close_branch_points(</span>
+<span class="sd">                                                                    skeleton_branches=segment_branches,</span>
+<span class="sd">                                                    combine_threshold=combine_close_skeleton_nodes_threshold)</span>
+
+<span class="sd">            segment_branches_filtered = np.array(segment_branches_filtered)</span>
+<span class="sd">            #print(f&quot;kept_branches_idx = {kept_branches_idx}&quot;)</span>
+<span class="sd">            print(f&quot;After combining close endpoints max(kept_branches_idx) = {max(kept_branches_idx)}, len(kept_branches_idx) = {len(kept_branches_idx)}&quot;)</span>
+
+<span class="sd">            segment_mesh_faces_filtered = [k for i,k in enumerate(segment_mesh_faces) if i in set(kept_branches_idx)]</span>
+<span class="sd">        else:</span>
+<span class="sd">            segment_mesh_faces_filtered = segment_mesh_faces</span>
+<span class="sd">            segment_branches_filtered = segment_branches</span>
+<span class="sd">            kept_branches_idx = np.arange(len(segment_mesh_faces_filtered))</span>
+
+<span class="sd">    # -------------- 12/27 Do the filtering for end-nodes ---------------------- #</span>
+<span class="sd">    </span>
+<span class="sd">    if filter_end_nodes:</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        Pseudocode: </span>
+<span class="sd">        1) Do the cleaning and decomposition of branches</span>
+<span class="sd">        2) Get the mapping from original branches to the cleaned branches</span>
+<span class="sd">        3) For each of the new cleaned branch:</span>
+<span class="sd">        - get the indexes fo the original branches that it matched to</span>
+<span class="sd">        - build the face list by concatentating those</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        #1) Do the cleaning and decomposition of branches</span>
+<span class="sd">        curr_limb_sk_cleaned = sk.clean_skeleton(sk.stack_skeletons(segment_branches_filtered),</span>
+<span class="sd">                     distance_func=sk.skeletal_distance,</span>
+<span class="sd">                     min_distance_to_junction=filter_end_node_length,</span>
+<span class="sd">                     return_skeleton=True,</span>
+<span class="sd">                     print_flag=False,</span>
+<span class="sd">                    return_removed_skeletons=False)</span>
+
+<span class="sd">        cleaned_branches = sk.decompose_skeleton_to_branches(curr_limb_sk_cleaned)</span>
+
+<span class="sd">        #2) Get the mapping from original branches to the cleaned branches</span>
+<span class="sd">        original_br_mapping = sk.map_between_branches_lists(segment_branches_filtered,cleaned_branches)</span>
+
+<span class="sd">        if not return_skeleton_only:</span>
+<span class="sd">            #3) For each of the new cleaned branch:</span>
+<span class="sd">            #- get the indexes fo the original branches that it matched to</span>
+<span class="sd">            #- build the face list by concatentating those</span>
+
+<span class="sd">            cleaned_branches_faces_filtered = []</span>
+<span class="sd">            for j,cl_b in enumerate(cleaned_branches):</span>
+<span class="sd">                or_idx = np.where(original_br_mapping==j)[0]</span>
+<span class="sd">                cleaned_branches_faces_filtered.append(np.concatenate([segment_mesh_faces_filtered[k] for k in or_idx]))</span>
+
+<span class="sd">            #4) Do the reassignment</span>
+<span class="sd">            segment_mesh_faces_filtered = cleaned_branches_faces_filtered</span>
+<span class="sd">            segment_branches_filtered = np.array(cleaned_branches)</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
+<span class="sd">    # ------------------ End of filtering for end nodes</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c1"># -- Step 3: Creating the mesh correspondence --</span>
+    
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Step 3: Mesh correspondence&quot;</span><span class="p">)</span>
+    <span class="n">meshparty_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="n">sk_vertices_to_mesh_vertices</span> <span class="o">=</span> <span class="n">gu</span><span class="o">.</span><span class="n">invert_mapping</span><span class="p">(</span><span class="n">sk_meshparty_obj</span><span class="o">.</span><span class="n">mesh_to_skel_map</span><span class="p">)</span>
+    <span class="c1">#getting a list of all the original vertices that belong to each segment</span>
+    <span class="n">segment_mesh_vertices</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">sk_vertices_to_mesh_vertices</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">segment_list</span><span class="p">]))</span> <span class="k">for</span> <span class="n">segment_list</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">]</span>
+    <span class="c1">#getting a list of all the original vertices that belong to each segment</span>
+    <span class="n">segment_mesh_faces</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">limb_mesh_mparty</span><span class="o">.</span><span class="n">vertex_faces</span><span class="p">[</span><span class="n">k</span><span class="p">])</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">segment_mesh_vertices</span><span class="p">]</span>
+    <span class="n">segment_mesh_faces</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span><span class="p">[</span><span class="n">k</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">segment_mesh_faces</span><span class="p">]</span>
+    
+
+    
+
+    <span class="c1"># -------------- 12/27 Do the filtering for end-nodes ---------------------- #</span>
+    <span class="n">segment_branches_filtered</span> <span class="o">=</span> <span class="n">segment_branches</span>
+    <span class="n">segment_mesh_faces_filtered</span> <span class="o">=</span> <span class="n">segment_mesh_faces</span>
+    
+    <span class="k">if</span> <span class="n">combine_close_skeleton_nodes_threshold</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;combining close nodes&quot;</span><span class="p">)</span>
+        
+        
+        <span class="n">segment_branches_filtered</span><span class="p">,</span><span class="n">kept_branches_idx</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">combine_close_branch_points</span><span class="p">(</span>
+                                                                <span class="n">skeleton_branches</span><span class="o">=</span><span class="n">segment_branches_filtered</span><span class="p">,</span>
+                                                <span class="n">combine_threshold</span><span class="o">=</span><span class="n">combine_close_skeleton_nodes_threshold</span><span class="p">)</span>
+
+        <span class="n">segment_branches_filtered</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">segment_branches_filtered</span><span class="p">)</span>
+        <span class="c1">#print(f&quot;kept_branches_idx = {kept_branches_idx}&quot;)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;After combining close endpoints max(kept_branches_idx) = </span><span class="si">{</span><span class="nb">max</span><span class="p">(</span><span class="n">kept_branches_idx</span><span class="p">)</span><span class="si">}</span><span class="s2">, len(kept_branches_idx) = </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">kept_branches_idx</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="n">segment_mesh_faces_filtered</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">segment_mesh_faces</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">kept_branches_idx</span><span class="p">)]</span>
+    <span class="k">else</span><span class="p">:</span>
+        
+        <span class="n">kept_branches_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">segment_mesh_faces_filtered</span><span class="p">))</span>
+    
+    <span class="k">if</span> <span class="n">filter_end_nodes</span><span class="p">:</span>
+<span class="w">        </span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pseudocode: </span>
+<span class="sd">        1) Do the cleaning and decomposition of branches</span>
+<span class="sd">        2) Get the mapping from original branches to the cleaned branches</span>
+<span class="sd">        3) For each of the new cleaned branch:</span>
+<span class="sd">        - get the indexes fo the original branches that it matched to</span>
+<span class="sd">        - build the face list by concatentating those</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;inside filter nodes &quot;</span><span class="p">)</span>
+        <span class="c1">#1) Do the cleaning and decomposition of branches</span>
+        <span class="n">curr_limb_sk_cleaned</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">clean_skeleton</span><span class="p">(</span><span class="n">sk</span><span class="o">.</span><span class="n">stack_skeletons</span><span class="p">(</span><span class="n">segment_branches_filtered</span><span class="p">),</span>
+                     <span class="n">distance_func</span><span class="o">=</span><span class="n">sk</span><span class="o">.</span><span class="n">skeletal_distance</span><span class="p">,</span>
+                     <span class="n">min_distance_to_junction</span><span class="o">=</span><span class="n">filter_end_node_length</span><span class="p">,</span>
+                     <span class="n">return_skeleton</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                     <span class="n">print_flag</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                    <span class="n">return_removed_skeletons</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">cleaned_branches</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">decompose_skeleton_to_branches</span><span class="p">(</span><span class="n">curr_limb_sk_cleaned</span><span class="p">)</span>
+
+        <span class="c1">#2) Get the mapping from original branches to the cleaned branches</span>
+        <span class="n">original_br_mapping</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">map_between_branches_lists</span><span class="p">(</span><span class="n">segment_branches_filtered</span><span class="p">,</span><span class="n">cleaned_branches</span><span class="p">)</span>
+
+        <span class="c1">#if not return_skeleton_only:</span>
+        
+        <span class="c1">#3) For each of the new cleaned branch:</span>
+        <span class="c1">#- get the indexes fo the original branches that it matched to</span>
+        <span class="c1">#- build the face list by concatentating those</span>
+
+        <span class="n">cleaned_branches_faces_filtered</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">cl_b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cleaned_branches</span><span class="p">):</span>
+            <span class="n">or_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">original_br_mapping</span><span class="o">==</span><span class="n">j</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">cleaned_branches_faces_filtered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">segment_mesh_faces_filtered</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">or_idx</span><span class="p">]))</span>
+
+        <span class="c1">#4) Do the reassignment</span>
+        <span class="n">segment_mesh_faces_filtered</span> <span class="o">=</span> <span class="n">cleaned_branches_faces_filtered</span>
+        <span class="n">segment_branches_filtered</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">cleaned_branches</span><span class="p">)</span>
+            
+    <span class="c1"># --------------- 10/29: Adding in the part that combines the branch points that are close ----------- #</span>
+
+    
+    
+    
+    <span class="c1"># ------------------ End of filtering for end nodes</span>
+    
+    <span class="c1">#return segment_branches_filtered</span>
+    
+    
+    
+
+    <span class="c1">#face_lookup = gu.invert_mapping(segment_mesh_faces)</span>
+    <span class="n">face_lookup</span> <span class="o">=</span> <span class="n">gu</span><span class="o">.</span><span class="n">invert_mapping</span><span class="p">(</span><span class="n">segment_mesh_faces_filtered</span><span class="p">)</span>
+
+    <span class="n">curr_limb_mesh</span> <span class="o">=</span> <span class="n">limb_mesh_mparty</span>
+
+
+    <span class="n">original_labels</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">itertools</span><span class="o">.</span><span class="n">chain</span><span class="o">.</span><span class="n">from_iterable</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">face_lookup</span><span class="o">.</span><span class="n">values</span><span class="p">()))))</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;max(original_labels),len(original_labels) = </span><span class="si">{</span><span class="p">(</span><span class="nb">max</span><span class="p">(</span><span class="n">original_labels</span><span class="p">),</span><span class="nb">len</span><span class="p">(</span><span class="n">original_labels</span><span class="p">))</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="n">face_coloring_copy</span> <span class="o">=</span> <span class="n">cu</span><span class="o">.</span><span class="n">resolve_empty_conflicting_face_labels</span><span class="p">(</span><span class="n">curr_limb_mesh</span> <span class="o">=</span> <span class="n">curr_limb_mesh</span><span class="p">,</span>
+                                                                <span class="n">face_lookup</span><span class="o">=</span><span class="n">face_lookup</span><span class="p">,</span>
+                                                                <span class="n">no_missing_labels</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">original_labels</span><span class="p">))</span>
+
+
+    <span class="c1"># -- splitting the mesh pieces into individual pieces</span>
+    <span class="n">divided_submeshes</span><span class="p">,</span><span class="n">divided_submeshes_idx</span> <span class="o">=</span> <span class="n">tu</span><span class="o">.</span><span class="n">split_mesh_into_face_groups</span><span class="p">(</span><span class="n">curr_limb_mesh</span><span class="p">,</span><span class="n">face_coloring_copy</span><span class="p">,</span>
+                                                                            <span class="n">return_dict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total time for meshParty mesh correspondence = </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">meshparty_time</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    <span class="c1"># -- Step 4: Getting the Widths ---</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Step 4: Retrieving Widths&quot;</span><span class="p">)</span>
+    <span class="n">meshparty_time</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+
+    <span class="c1">#calculating the widths (need adjustment if did the filtering 12/28)</span>
+    <span class="n">segment_width_measurements</span> <span class="o">=</span> <span class="p">[</span><span class="n">sk_meshparty_obj</span><span class="o">.</span><span class="n">vertex_properties</span><span class="p">[</span><span class="s2">&quot;rs&quot;</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">]</span>
+    <span class="n">segment_width_measurements_filterd</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">segment_width_measurements</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">set</span><span class="p">(</span><span class="n">kept_branches_idx</span><span class="p">)]</span> 
+    <span class="c1">#kept branches were supposed to refer to original but now they refer to those after the cleaning filtered</span>
+
+    <span class="k">if</span> <span class="n">filter_end_nodes</span><span class="p">:</span>
+        <span class="n">segment_width_measurements_filterd_new</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">j</span><span class="p">,</span><span class="n">cl_b</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cleaned_branches</span><span class="p">):</span>
+            <span class="n">or_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">original_br_mapping</span><span class="o">==</span><span class="n">j</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">segment_width_measurements_filterd_new</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">segment_width_measurements_filterd</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">or_idx</span><span class="p">]))</span>
+        <span class="n">segment_width_measurements_filterd</span> <span class="o">=</span> <span class="n">segment_width_measurements_filterd_new</span>
+
+
+    <span class="n">segment_widths_median_filtered</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">seg_ws</span> <span class="ow">in</span> <span class="n">segment_width_measurements_filterd</span><span class="p">:</span>
+        <span class="n">seg_ws</span> <span class="o">=</span> <span class="n">seg_ws</span><span class="p">[</span><span class="n">seg_ws</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">seg_ws</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">segment_widths_median_filtered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">inf</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">segment_widths_median_filtered</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">seg_ws</span><span class="p">))</span>
+    <span class="n">segment_widths_median_filtered</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">segment_widths_median_filtered</span><span class="p">)</span>     
+    
+    
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total time for meshParty Retrieving Widths = </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="n">meshparty_time</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="c1"># ---- Our Final Products -----</span>
+    
+    
+
+<span class="c1">#     return (segment_branches, #skeleton branches</span>
+<span class="c1">#             divided_submeshes, divided_submeshes_idx, #mesh correspondence (mesh and indices)</span>
+<span class="c1">#             segment_widths_median) #widths</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">return_skeleton_only</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">segment_branches_filtered</span><span class="p">,</span> <span class="c1">#skeleton branches</span>
+                <span class="n">divided_submeshes</span><span class="p">,</span> <span class="n">divided_submeshes_idx</span><span class="p">,</span> <span class="c1">#mesh correspondence (mesh and indices)</span>
+                <span class="n">segment_widths_median_filtered</span><span class="p">)</span> <span class="c1">#widths</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sk</span><span class="o">.</span><span class="n">stack_skeletons</span><span class="p">(</span><span class="n">segment_branches_filtered</span><span class="p">)</span></div>
+    
+
+
+
+<div class="viewcode-block" id="width_median_weighted"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.width_median_weighted">[docs]</a><span class="k">def</span> <span class="nf">width_median_weighted</span><span class="p">(</span><span class="n">widths</span><span class="p">,</span>
+                          <span class="n">skeletons</span><span class="p">,</span>
+                          <span class="n">filter_away_zeros</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                         <span class="n">return_value_if_empty</span> <span class="o">=</span> <span class="mi">10000</span><span class="p">,</span>
+                         <span class="n">verbose</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculaes the median width</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">verbose</span> <span class="o">=</span> <span class="kc">True</span>
+    
+    <span class="n">widths</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">widths</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;widths = </span><span class="si">{</span><span class="n">widths</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">filter_away_zeros</span><span class="p">:</span>
+        <span class="n">widths_mask</span> <span class="o">=</span> <span class="n">widths</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">widths_mask</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">return_value_if_empty</span>
+        
+        <span class="n">width_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">widths_mask</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">widths</span> <span class="o">=</span> <span class="n">widths</span><span class="p">[</span><span class="n">widths_mask</span><span class="p">]</span>
+        <span class="n">skeletons</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">k</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">skeletons</span><span class="p">)</span> <span class="k">if</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">width_idx</span><span class="p">]</span>
+        
+    <span class="n">width_median</span> <span class="o">=</span> <span class="n">nu</span><span class="o">.</span><span class="n">weighted_average</span><span class="p">(</span><span class="n">widths</span><span class="p">,[</span><span class="n">sk</span><span class="o">.</span><span class="n">calculate_skeleton_distance</span><span class="p">(</span><span class="n">k</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="n">skeletons</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">width_median</span></div>
+
+<div class="viewcode-block" id="branches_from_mesh"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.branches_from_mesh">[docs]</a><span class="k">def</span> <span class="nf">branches_from_mesh</span><span class="p">(</span>
+    <span class="n">mesh</span><span class="p">,</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">filter_mesh</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1">#will filter the mesh for just one connected piece</span>
+    <span class="n">invalidation_d</span><span class="o">=</span><span class="n">invalidation_d_default</span><span class="p">,</span>
+    <span class="n">smooth_neighborhood</span><span class="o">=</span><span class="n">smooth_neighborhood_default</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    
+    <span class="c1">#arguments for correspondence with branches</span>
+    <span class="n">meshparty_segment_size</span> <span class="o">=</span> <span class="n">meshparty_segment_size_global</span><span class="p">,</span>
+    <span class="n">combine_close_skeleton_nodes_threshold</span> <span class="o">=</span> <span class="n">combine_close_skeleton_nodes_threshold_global</span><span class="p">,</span>
+    <span class="n">filter_end_nodes</span><span class="o">=</span><span class="n">filter_end_nodes_global</span><span class="p">,</span>
+    <span class="n">filter_end_node_length</span> <span class="o">=</span> <span class="n">filter_end_node_length_global</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Purpose: To create a skeleton and the mesh correspondence from a mesh</span>
+<span class="sd">    and the starting root</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">sk_meshparty_obj</span> <span class="o">=</span> <span class="n">m_sk</span><span class="o">.</span><span class="n">skeletonize_mesh_largest_component</span><span class="p">(</span><span class="n">mesh</span><span class="p">,</span>
+                                                            <span class="n">root</span><span class="o">=</span><span class="n">root</span><span class="p">,</span>
+                                                               <span class="n">invalidation_d</span><span class="o">=</span><span class="n">invalidation_d</span><span class="p">,</span>
+                                                               <span class="n">smooth_neighborhood</span><span class="o">=</span><span class="n">smooth_neighborhood</span><span class="p">,</span>
+                                                              <span class="n">filter_mesh</span><span class="o">=</span><span class="n">filter_mesh</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Time for sk_meshparty_obj = </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="w"> </span><span class="n">st</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    
+    <span class="p">(</span><span class="n">segment_branches</span><span class="p">,</span> <span class="c1">#skeleton branches</span>
+    <span class="n">divided_submeshes</span><span class="p">,</span> <span class="n">divided_submeshes_idx</span><span class="p">,</span> <span class="c1">#mesh correspondence (mesh and indices)</span>
+    <span class="n">segment_widths_median</span><span class="p">)</span> <span class="o">=</span> <span class="n">m_sk</span><span class="o">.</span><span class="n">skeleton_obj_to_branches</span><span class="p">(</span><span class="n">sk_meshparty_obj</span><span class="p">,</span>
+                                                          <span class="n">mesh</span> <span class="o">=</span> <span class="n">mesh</span><span class="p">,</span>
+                                                          <span class="n">meshparty_segment_size</span><span class="o">=</span><span class="n">meshparty_segment_size</span><span class="p">,</span>
+                    <span class="n">combine_close_skeleton_nodes_threshold</span><span class="o">=</span><span class="n">combine_close_skeleton_nodes_threshold</span><span class="p">,</span>
+                                            <span class="n">filter_end_nodes</span><span class="o">=</span><span class="n">filter_end_nodes</span><span class="p">,</span>
+                                    <span class="n">filter_end_node_length</span><span class="o">=</span><span class="n">filter_end_node_length</span><span class="p">)</span>
+    
+    <span class="n">width_median</span> <span class="o">=</span> <span class="n">m_sk</span><span class="o">.</span><span class="n">width_median_weighted</span><span class="p">(</span><span class="n">segment_widths_median</span><span class="p">,</span><span class="n">segment_branches</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;width_median= </span><span class="si">{</span><span class="n">width_median</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+    
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Time for correspondence = </span><span class="si">{</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="w"> </span><span class="n">st</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        
+    <span class="k">return</span> <span class="p">(</span><span class="n">segment_branches</span><span class="p">,</span> <span class="c1">#skeleton branches</span>
+    <span class="n">divided_submeshes</span><span class="p">,</span> <span class="n">divided_submeshes_idx</span><span class="p">,</span> <span class="c1">#mesh correspondence (mesh and indices)</span>
+    <span class="n">segment_widths_median</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="skeletonize"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.meshparty_skeletonize.skeletonize">[docs]</a><span class="k">def</span> <span class="nf">skeletonize</span><span class="p">(</span>
+    <span class="n">mesh</span><span class="p">,</span>
+    <span class="n">root</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">filter_mesh</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="c1">#will filter the mesh for just one connected piece</span>
+    <span class="n">invalidation_d</span><span class="o">=</span><span class="n">invalidation_d_default</span><span class="p">,</span>
+    <span class="n">smooth_neighborhood</span><span class="o">=</span><span class="n">smooth_neighborhood_default</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    
+    <span class="c1">#arguments for correspondence with branches</span>
+    <span class="n">meshparty_segment_size</span> <span class="o">=</span> <span class="n">meshparty_segment_size_global</span><span class="p">,</span>
+    <span class="n">combine_close_skeleton_nodes_threshold</span> <span class="o">=</span> <span class="n">combine_close_skeleton_nodes_threshold_global</span><span class="p">,</span>
+    <span class="n">filter_end_nodes</span> <span class="o">=</span> <span class="n">filter_end_nodes_global</span><span class="p">,</span>
+    <span class="n">filter_end_node_length</span> <span class="o">=</span> <span class="n">filter_end_node_length_global</span><span class="p">,</span>
+    
+    
+    <span class="n">plot_skeleton</span><span class="o">=</span><span class="kc">False</span>
+    <span class="p">):</span>
+<span class="w">    </span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Purpose: Will return a meshParty skeleton with all of the filtering</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="p">(</span><span class="n">segment_branches</span><span class="p">,</span> <span class="c1">#skeleton branches</span>
+    <span class="n">divided_submeshes</span><span class="p">,</span> <span class="n">divided_submeshes_idx</span><span class="p">,</span> <span class="c1">#mesh correspondence (mesh and indices)</span>
+    <span class="n">segment_widths_median</span><span class="p">)</span> <span class="o">=</span> <span class="n">m_sk</span><span class="o">.</span><span class="n">branches_from_mesh</span><span class="p">(</span>
+        <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="n">root</span><span class="p">,</span>
+        <span class="n">filter_mesh</span><span class="o">=</span><span class="n">filter_mesh</span><span class="p">,</span> <span class="c1">#will filter the mesh for just one connected piece</span>
+        <span class="n">invalidation_d</span><span class="o">=</span><span class="n">invalidation_d</span><span class="p">,</span>
+        <span class="n">smooth_neighborhood</span><span class="o">=</span><span class="n">smooth_neighborhood</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+
+        <span class="c1">#arguments for correspondence with branches</span>
+        <span class="n">meshparty_segment_size</span> <span class="o">=</span> <span class="n">meshparty_segment_size</span><span class="p">,</span>
+        <span class="n">combine_close_skeleton_nodes_threshold</span> <span class="o">=</span> <span class="n">combine_close_skeleton_nodes_threshold</span><span class="p">,</span>
+        <span class="n">filter_end_nodes</span><span class="o">=</span><span class="n">filter_end_nodes</span><span class="p">,</span>
+        <span class="n">filter_end_node_length</span> <span class="o">=</span> <span class="n">filter_end_node_length</span>
+    <span class="p">)</span>
+    
+    <span class="n">return_sk</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">stack_skeletons</span><span class="p">(</span><span class="n">segment_branches</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">plot_skeleton</span><span class="p">:</span>
+        <span class="n">ipvu</span><span class="o">.</span><span class="n">plot_objects</span><span class="p">(</span>
+            <span class="n">mesh</span><span class="p">,</span>
+            <span class="n">main_skeleton</span> <span class="o">=</span> <span class="n">return_sk</span>
+        <span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">return_sk</span></div>
+
+
+
+
+<span class="c1">#--- from mesh_tools ---</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">compartment_utils</span> <span class="k">as</span> <span class="n">cu</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">skeleton_utils</span> <span class="k">as</span> <span class="n">sk</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">trimesh_utils</span> <span class="k">as</span> <span class="n">tu</span>
+
+<span class="c1">#--- from datasci_tools ---</span>
+<span class="kn">from</span> <span class="nn">datasci_tools</span> <span class="kn">import</span> <span class="n">general_utils</span> <span class="k">as</span> <span class="n">gu</span>
+<span class="kn">from</span> <span class="nn">datasci_tools</span> <span class="kn">import</span> <span class="n">ipyvolume_utils</span> <span class="k">as</span> <span class="n">ipvu</span>
+<span class="kn">from</span> <span class="nn">datasci_tools</span> <span class="kn">import</span> <span class="n">numpy_utils</span> <span class="k">as</span> <span class="n">nu</span>
+<span class="kn">from</span> <span class="nn">datasci_tools.tqdm_utils</span> <span class="kn">import</span> <span class="n">tqdm</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">meshparty_skeletonize</span> <span class="k">as</span> <span class="n">m_sk</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Brendan Celii.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
