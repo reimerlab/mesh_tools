@@ -7,12 +7,11 @@ cloud-volume>=8.24.2
 h5py>=3.1.0
 ipyvolume>=0.5.2
 matplotlib>=3.3.4
-
 networkx>=2.5
 open3d>=0.11.2
 pymeshfix>=0.13.4
-datasci_tools @ git+https://git@github.com/bacelii/datasci_tools.git
-machine_learning_tools @ git+https://git@github.com/bacelii/machine_learning_tools.git
+datasci-stdlib-tools>=1.0.0
+machine_learning_tools>1.0.0
 scipy>=1.5.4
 tqdm>=4.62.2
 trimesh>=3.9.0
