@@ -22,3 +22,21 @@ docker container run -it \
     -v ./notebooks:/notebooks \
     celiib/mesh_tools:v3
 ```
+
+### Inside Docker Container Install Package
+
+go to http://localhost:8890/lab and open terminal to run the folloswing commands
+
+```bash
+# install from pypi release
+pip3 install mesh-processing-tools
+```
+
+OR
+
+```bash
+# install from latest github development
+cd /
+git clone https://github.com/reimerlab/mesh_tools
+pip3 install -e /mesh_tools
+```

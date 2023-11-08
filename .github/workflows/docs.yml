@@ -34,6 +34,11 @@ jobs:
         run: |
           python3 -m pip install --use-deprecated=legacy-resolver -r ./requirements.txt
       # pip3 install git+https://github.com/bacelii/datasci_tools.git
+      - name: Add any new modules
+        run: |
+          rm docs/${{ github.event.repository.name }}.rst
+          sphinx-apidoc -o docs ${{ github.event.repository.name }}/
+
       - name: Build docs
         run: |
           cd docs
