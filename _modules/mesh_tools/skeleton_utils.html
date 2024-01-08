@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>mesh_tools.skeleton_utils &mdash; mesh_tools  documentation</title>
-      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -7027,6 +7029,8 @@
     <span class="n">sk_nodes</span> <span class="o">=</span> <span class="n">sk</span><span class="o">.</span><span class="n">convert_skeleton_to_nodes</span><span class="p">(</span><span class="n">skeleton</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">nu</span><span class="o">.</span><span class="n">bounding_box_volume</span><span class="p">(</span><span class="n">sk_nodes</span><span class="p">)</span></div>
 
+<div class="viewcode-block" id="bbox"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.skeleton_utils.bbox">[docs]</a><span class="k">def</span> <span class="nf">bbox</span><span class="p">(</span><span class="n">skeleton</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">nu</span><span class="o">.</span><span class="n">bounding_box</span><span class="p">(</span><span class="n">skeleton</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span></div>
 
 <div class="viewcode-block" id="coordinates_along_skeleton_offset_from_start"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.skeleton_utils.coordinates_along_skeleton_offset_from_start">[docs]</a><span class="k">def</span> <span class="nf">coordinates_along_skeleton_offset_from_start</span><span class="p">(</span>
     <span class="n">skeleton</span><span class="p">,</span>

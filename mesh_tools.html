@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html class="writer-html5" lang="en" >
+<html class="writer-html5" lang="en">
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>mesh_tools package &mdash; mesh_tools  documentation</title>
-      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
-      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
   <!--[if lt IE 9]>
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
@@ -92,6 +94,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#mesh_tools.skeleton_utils.add_and_smooth_segment_to_branch"><code class="docutils literal notranslate"><span class="pre">add_and_smooth_segment_to_branch()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mesh_tools.skeleton_utils.align_skeletons_at_connectivity"><code class="docutils literal notranslate"><span class="pre">align_skeletons_at_connectivity()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mesh_tools.skeleton_utils.angle_between_skeleton_vectors_and_ref_vector"><code class="docutils literal notranslate"><span class="pre">angle_between_skeleton_vectors_and_ref_vector()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mesh_tools.skeleton_utils.bbox"><code class="docutils literal notranslate"><span class="pre">bbox()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mesh_tools.skeleton_utils.bbox_volume"><code class="docutils literal notranslate"><span class="pre">bbox_volume()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mesh_tools.skeleton_utils.bounding_box_corners"><code class="docutils literal notranslate"><span class="pre">bounding_box_corners()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mesh_tools.skeleton_utils.calcification"><code class="docutils literal notranslate"><span class="pre">calcification()</span></code></a></li>
@@ -1205,6 +1208,11 @@ vector and certain skeleton vectors created
 by sections of a skeleton that has
 been ordered and reshaped</p>
 </dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mesh_tools.skeleton_utils.bbox">
+<span class="sig-prename descclassname"><span class="pre">mesh_tools.skeleton_utils.</span></span><span class="sig-name descname"><span class="pre">bbox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">skeleton</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mesh_tools/skeleton_utils.html#bbox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mesh_tools.skeleton_utils.bbox" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mesh_tools.skeleton_utils.bbox_volume">
@@ -2527,7 +2535,7 @@ plot_closest_coordinates = True)</p>
 if (!input)
 {</p>
 <blockquote>
-<div><p>std::cerr &lt;&lt; “Cannot open file ” &lt;&lt; std::endl;
+<div><p>std::cerr &lt;&lt; “Cannot open file “ &lt;&lt; std::endl;
 return 2;</p>
 </div></blockquote>
 <p>}
@@ -2536,7 +2544,7 @@ std::vector&lt; std::vector&lt;std::size_t&gt; &gt; polygons;
 if (!CGAL::read_OFF(input, points, polygons))
 {</p>
 <blockquote>
-<div><p>std::cerr &lt;&lt; “Error parsing the OFF file ” &lt;&lt; std::endl;
+<div><p>std::cerr &lt;&lt; “Error parsing the OFF file “ &lt;&lt; std::endl;
 return 3;</p>
 </div></blockquote>
 <p>}
