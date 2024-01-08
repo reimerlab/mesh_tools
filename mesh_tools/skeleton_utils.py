@@ -6956,6 +6956,8 @@ def bbox_volume(skeleton):
     sk_nodes = sk.convert_skeleton_to_nodes(skeleton)
     return nu.bounding_box_volume(sk_nodes)
 
+def bbox(skeleton):
+    return nu.bounding_box(skeleton.reshape(-1,3))
 
 def coordinates_along_skeleton_offset_from_start(
     skeleton,
