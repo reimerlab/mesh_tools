@@ -3592,7 +3592,7 @@ def decompose_skeleton_to_branches(current_skeleton,
         if len(c_comp) >= 2:
             #add the subgraph to the branches
             branch_subgraph = el_sk_graph.subgraph(list(c_comp))
-            branch_subgraph = nx. nx.minimum_spanning_tree(branch_subgraph)
+            branch_subgraph = nx.minimum_spanning_tree(branch_subgraph)
             #and constant loop that check for cycle in this complexand if there is one then delete a random edge from the cycle
 
             """
