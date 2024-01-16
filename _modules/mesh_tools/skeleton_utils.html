@@ -3665,7 +3665,7 @@
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">c_comp</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
             <span class="c1">#add the subgraph to the branches</span>
             <span class="n">branch_subgraph</span> <span class="o">=</span> <span class="n">el_sk_graph</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">c_comp</span><span class="p">))</span>
-            <span class="n">branch_subgraph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span> <span class="n">nx</span><span class="o">.</span><span class="n">minimum_spanning_tree</span><span class="p">(</span><span class="n">branch_subgraph</span><span class="p">)</span>
+            <span class="n">branch_subgraph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">minimum_spanning_tree</span><span class="p">(</span><span class="n">branch_subgraph</span><span class="p">)</span>
             <span class="c1">#and constant loop that check for cycle in this complexand if there is one then delete a random edge from the cycle</span>
 
 <span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
