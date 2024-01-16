@@ -34,7 +34,7 @@ def get_long_description(filepath='README.md'):
 
 setup(
     name='mesh_processing_tools', # the name of the package, which can be different than the folder when using pip instal
-    version='1.0.2',
+    version='1.0.3',
     description='Utility functions for mesh representation objects (like trimesh) and manipulations using 3rd party packages (CGAL, Meshlab, etc.)',
     #long_description=get_long_description(),
 	project_urls={
