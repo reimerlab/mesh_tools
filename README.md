@@ -9,7 +9,7 @@ Utility functions for mesh representation objects (like trimesh) and manipulatio
 ### Download Docker Image
 
 ```bash
-docker pull celiib/mesh_tools:v3
+docker pull celiib/mesh_tools:v4
 ```
 
 ### Run Docker Container (from CLI)
@@ -20,7 +20,7 @@ mkdir notebooks
 docker container run -it \
     -p 8890:8888 \
     -v ./notebooks:/notebooks \
-    celiib/mesh_tools:v3
+    celiib/mesh_tools:v4
 ```
 
 ### Inside Docker Container Install Package
