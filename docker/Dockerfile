@@ -77,15 +77,143 @@ RUN pip3 install setuptools=='59.6.0' \
 
 
 RUN python3 -m pip --no-cache-dir install \
-    notebook==6.5.4 \
-    jupyterlab==4.0.2 \
-    jupyter_contrib_nbextensions \
-    simplejson \
-    jedi==0.17.2 \
-    ipywidgets==8.1.1 \
-    ipywebrtc \
-    jupyterlab_widgets \
-    ipyvolume==0.6.3
+    anyio==3.7.1 \ 
+    argon2-cffi==21.3.0 \ 
+    argon2-cffi-bindings==21.2.0 \ 
+    arrow==1.2.3 \ 
+    asn1crypto==0.24.0 \ 
+    asttokens==2.2.1 \ 
+    async-lru==2.0.4 \ 
+    attrs==23.1.0 \ 
+    Babel==2.12.1 \ 
+    backcall==0.2.0 \ 
+    beautifulsoup4==4.12.2 \ 
+    bleach==6.0.0 \ 
+    bqplot==0.12.40 \ 
+    certifi==2023.7.22 \ 
+    cffi==1.15.1 \ 
+    charset-normalizer==3.2.0 \ 
+    comm==0.1.4 \ 
+    contourpy==1.1.0 \ 
+    cryptography==2.1.4 \ 
+    cycler==0.11.0 \ 
+    Cython==0.29.36 \ 
+    debugpy==1.6.7.post1 \ 
+    decorator==5.1.1 \ 
+    defusedxml==0.7.1 \ 
+    exceptiongroup==1.1.2 \ 
+    executing==1.2.0 \ 
+    fastjsonschema==2.18.0 \ 
+    fonttools==4.42.0 \ 
+    fqdn==1.5.1 \ 
+    idna==3.4 \ 
+    importlib-metadata==6.8.0 \ 
+    importlib-resources==6.0.1 \ 
+    ipydatawidgets==4.3.5 \ 
+    ipykernel==6.25.1 \ 
+    ipython==8.12.2 \ 
+    ipython-genutils==0.2.0 \ 
+    ipyvolume==0.6.3 \ 
+    ipyvue==1.9.2 \ 
+    ipyvuetify==1.8.10 \ 
+    ipywebrtc==0.6.0 \ 
+    ipywidgets==8.1.0 \ 
+    isoduration==20.11.0 \ 
+    jedi==0.17.2 \ 
+    Jinja2==3.1.2 \ 
+    json5==0.9.14 \ 
+    jsonpointer==2.4 \ 
+    jsonschema==4.19.0 \ 
+    jsonschema-specifications==2023.7.1 \ 
+    jupyter-contrib-core==0.4.2 \ 
+    jupyter-contrib-nbextensions==0.7.0 \ 
+    jupyter-events==0.7.0 \ 
+    jupyter-highlight-selected-word==0.2.0 \ 
+    jupyter-lsp==2.2.0 \ 
+    jupyter-nbextensions-configurator==0.6.3 \ 
+    jupyter_client==8.3.0 \ 
+    jupyter_core==5.3.1 \ 
+    jupyter_server==2.7.0 \ 
+    jupyter_server_terminals==0.4.4 \ 
+    jupyterlab==4.0.2 \ 
+    jupyterlab-pygments==0.2.2 \ 
+    jupyterlab-widgets==3.0.8 \ 
+    jupyterlab_server==2.24.0 \ 
+    keyring==10.6.0 \ 
+    keyrings.alt==3.0 \ 
+    kiwisolver==1.4.4 \ 
+    lxml==4.9.3 \ 
+    MarkupSafe==2.1.3 \ 
+    matplotlib==3.7.2 \ 
+    matplotlib-inline==0.1.6 \ 
+    mistune==3.0.1 \ 
+    nbclassic==1.0.0 \ 
+    nbclient==0.8.0 \ 
+    nbconvert==7.7.3 \ 
+    nbformat==5.9.2 \ 
+    nest-asyncio==1.5.7 \ 
+    notebook==6.5.4 \ 
+    notebook_shim==0.2.3 \ 
+    numpy==1.24.4 \ 
+    overrides==7.4.0 \ 
+    packaging==23.1 \ 
+    pandas==2.0.3 \ 
+    pandocfilters==1.5.0 \ 
+    parso==0.7.1 \ 
+    pexpect==4.8.0 \ 
+    pickleshare==0.7.5 \ 
+    Pillow==10.0.0 \ 
+    pkgutil_resolve_name==1.3.10 \ 
+    platformdirs==3.10.0 \ 
+    prometheus-client==0.17.1 \ 
+    prompt-toolkit==3.0.39 \ 
+    psutil==5.9.5 \ 
+    ptyprocess==0.7.0 \ 
+    pure-eval==0.2.2 \ 
+    pycparser==2.21 \ 
+    pycrypto==2.6.1 \ 
+    Pygments==2.16.1 \ 
+    PyGObject==3.26.1 \ 
+    pyparsing==3.0.9 \ 
+    python-apt==1.6.6 \ 
+    python-dateutil==2.8.2 \ 
+    python-json-logger==2.0.7 \ 
+    pythreejs==2.4.2 \ 
+    pytz==2023.3 \ 
+    pyxdg==0.25 \ 
+    PyYAML==6.0.1 \ 
+    pyzmq==25.1.0 \ 
+    referencing==0.30.2 \ 
+    requests==2.31.0 \ 
+    rfc3339-validator==0.1.4 \ 
+    rfc3986-validator==0.1.1 \ 
+    rpds-py==0.9.2 \ 
+    Rtree==0.8.3 \ 
+    SecretStorage==2.3.1 \ 
+    Send2Trash==1.8.2 \ 
+    simplejson==3.19.1 \ 
+    six==1.11.0 \ 
+    sniffio==1.3.0 \ 
+    soupsieve==2.4.1 \ 
+    stack-data==0.6.2 \ 
+    terminado==0.17.1 \ 
+    tinycss2==1.2.1 \ 
+    tomli==2.0.1 \ 
+    tornado==6.3.2 \ 
+    traitlets==5.9.0 \ 
+    traittypes==0.2.1 \ 
+    typing_extensions==4.7.1 \ 
+    tzdata==2023.3 \ 
+    unattended-upgrades==0.1 \ 
+    uri-template==1.3.0 \ 
+    urllib3==2.0.4 \ 
+    wcwidth==0.2.6 \ 
+    webcolors==1.13 \ 
+    webencodings==0.5.1 \ 
+    websocket-client==1.6.1 \ 
+    widgetsnbextension==4.0.8 \ 
+    zipp==3.16.2
+
 
 RUN jupyter nbextension enable --py --sys-prefix ipyvolume \
     && jupyter nbextension enable --py --sys-prefix widgetsnbextension
@@ -109,7 +237,6 @@ RUN jupyter nbextension enable --py --sys-prefix ipyvolume \
 FROM base AS mesh_lite
 
 ADD ./python_bash_files/embree.bash /src/embree.bash
-
 RUN pip3 install cython==0.29.36
 
 RUN apt-get update && apt-get install -q -y \
@@ -118,7 +245,6 @@ RUN apt-get update && apt-get install -q -y \
     libtbb-dev \
     libglfw3-dev \
     && chmod +x /src/embree.bash && /src/embree.bash
-
 
 #-------------------------------------------------------------
 FROM mesh_lite AS mesh_heavy
