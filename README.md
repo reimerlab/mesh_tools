@@ -6,6 +6,8 @@ Utility functions for mesh representation objects (like trimesh) and manipulatio
 
 ---
 
+Note: _Current Docker environment does not currently work on Apple M series chips_
+
 ### Download Docker Image
 
 ```bash
