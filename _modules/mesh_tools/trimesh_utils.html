@@ -229,6 +229,8 @@
         <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">main_mesh_path</span></div>
 
+<span class="n">export_mesh</span> <span class="o">=</span> <span class="n">write_neuron_off</span>
+
 
 <div class="viewcode-block" id="combine_meshes"><a class="viewcode-back" href="../../mesh_tools.html#mesh_tools.trimesh_utils.combine_meshes">[docs]</a><span class="k">def</span> <span class="nf">combine_meshes</span><span class="p">(</span><span class="n">mesh_pieces</span><span class="p">,</span><span class="n">merge_vertices</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
     <span class="n">leftover_mesh</span> <span class="o">=</span> <span class="n">trimesh</span><span class="o">.</span><span class="n">Trimesh</span><span class="p">(</span><span class="n">vertices</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([]),</span><span class="n">faces</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([]))</span>
@@ -2792,6 +2794,15 @@
                                    <span class="n">return_significant_meshes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                    <span class="n">significant_mesh_threshold</span><span class="o">=</span><span class="mi">1000</span><span class="p">,</span>
                                   <span class="n">manifold_clean</span> <span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Access to the meshlab poisson surface reconstruction. This will attempt to create a manifold and watertight mesh using a shrinkwrapping mehtod on the outside of the current mesh</span>
+<span class="sd">    </span>
+<span class="sd">    Applications: </span>
+<span class="sd">    1) Turn mesh watertight</span>
+<span class="sd">    2) Turn mesh manifold</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    
     <span class="k">if</span> <span class="nb">type</span><span class="p">(</span><span class="n">output_folder</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">type</span><span class="p">(</span><span class="n">Path</span><span class="p">()):</span>
         <span class="n">output_folder</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">output_folder</span><span class="p">))</span>
         <span class="n">output_folder</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -3988,9 +3999,7 @@
 <span class="sd">    3) Refines the correspondence so only 1 skeletal</span>
 <span class="sd">    branch matched to each face</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="kn">from</span> <span class="nn">neurd</span> <span class="kn">import</span> <span class="n">preprocessing_vp2</span> <span class="k">as</span> <span class="n">pre</span>
-
-    <span class="n">local_correspondence</span> <span class="o">=</span> <span class="n">pre</span><span class="o">.</span><span class="n">mesh_correspondence_first_pass</span><span class="p">(</span>
+    <span class="n">local_correspondence</span> <span class="o">=</span> <span class="n">coru</span><span class="o">.</span><span class="n">mesh_correspondence_first_pass</span><span class="p">(</span>
         <span class="n">mesh</span><span class="p">,</span>
         <span class="n">skeleton</span><span class="p">,</span>
         <span class="n">skeleton_segment_width</span> <span class="o">=</span> <span class="n">skeleton_segment_width</span><span class="p">,</span>
@@ -4001,7 +4010,7 @@
         <span class="n">plot</span> <span class="o">=</span> <span class="n">plot_correspondence_first_pass</span><span class="p">,</span>
     <span class="p">)</span>
 
-    <span class="n">refined_correspondence</span> <span class="o">=</span> <span class="n">pre</span><span class="o">.</span><span class="n">correspondence_1_to_1</span><span class="p">(</span>
+    <span class="n">refined_correspondence</span> <span class="o">=</span> <span class="n">coru</span><span class="o">.</span><span class="n">correspondence_1_to_1</span><span class="p">(</span>
         <span class="n">mesh</span><span class="o">=</span><span class="n">mesh</span><span class="p">,</span>
         <span class="n">local_correspondence</span><span class="o">=</span><span class="n">local_correspondence</span><span class="p">,</span>
         <span class="n">plot</span> <span class="o">=</span> <span class="n">plot</span><span class="p">,</span>
@@ -4021,6 +4030,12 @@
     <span class="p">):</span>
 <span class="w">    </span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Note: the default parameters for this skeletonization and </span>
+<span class="sd">    segmentaiton are reverted to the original </span>
+<span class="sd">    cgal default parameters so that smaller </span>
+<span class="sd">    meshes will have a good skeletonization and segmentaiton</span>
+<span class="sd">    </span>
+<span class="sd">    </span>
 <span class="sd">    tu.skeleton_and_mesh_segmentation(</span>
 <span class="sd">        filepath = &quot;./elephant.off&quot;,</span>
 <span class="sd">        plot_segmentation = True,</span>
@@ -7193,6 +7208,7 @@
 <span class="c1">#--- from mesh_tools ---</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">compartment_utils</span> <span class="k">as</span> <span class="n">cu</span>
 <span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">skeleton_utils</span> <span class="k">as</span> <span class="n">sk</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">correspondence_utils</span> <span class="k">as</span> <span class="n">coru</span>
 
 <span class="c1">#--- from machine_learning_tools ---</span>
 <span class="k">try</span><span class="p">:</span>

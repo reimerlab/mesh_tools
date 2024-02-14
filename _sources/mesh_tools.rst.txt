@@ -12,6 +12,14 @@ mesh\_tools.compartment\_utils module
    :undoc-members:
    :show-inheritance:
 
+mesh\_tools.correspondence\_utils module
+----------------------------------------
+
+.. automodule:: mesh_tools.correspondence_utils
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 mesh\_tools.meshlab module
 --------------------------
 
