@@ -156,6 +156,8 @@ def write_neuron_off(current_mesh,main_mesh_path):
         f.write("\n")
     return main_mesh_path
 
+export_mesh = write_neuron_off
+
 
 def combine_meshes(mesh_pieces,merge_vertices=True):
     leftover_mesh = trimesh.Trimesh(vertices=np.array([]),faces=np.array([]))
@@ -2719,6 +2721,15 @@ def poisson_surface_reconstruction(mesh,
                                    return_significant_meshes=False,
                                    significant_mesh_threshold=1000,
                                   manifold_clean =True):
+
+    """
+    Access to the meshlab poisson surface reconstruction. This will attempt to create a manifold and watertight mesh using a shrinkwrapping mehtod on the outside of the current mesh
+    
+    Applications: 
+    1) Turn mesh watertight
+    2) Turn mesh manifold
+    """
+    
     if type(output_folder) != type(Path()):
         output_folder = Path(str(output_folder))
         output_folder.mkdir(parents=True,exist_ok=True)
@@ -3915,9 +3926,7 @@ def mesh_segmentation_from_skeleton(
     3) Refines the correspondence so only 1 skeletal
     branch matched to each face
     """
-    from neurd import preprocessing_vp2 as pre
-
-    local_correspondence = pre.mesh_correspondence_first_pass(
+    local_correspondence = coru.mesh_correspondence_first_pass(
         mesh,
         skeleton,
         skeleton_segment_width = skeleton_segment_width,
@@ -3928,7 +3937,7 @@ def mesh_segmentation_from_skeleton(
         plot = plot_correspondence_first_pass,
     )
 
-    refined_correspondence = pre.correspondence_1_to_1(
+    refined_correspondence = coru.correspondence_1_to_1(
         mesh=mesh,
         local_correspondence=local_correspondence,
         plot = plot,
@@ -3948,6 +3957,12 @@ def skeleton_and_mesh_segmentation(
     ):
     
     """
+    Note: the default parameters for this skeletonization and 
+    segmentaiton are reverted to the original 
+    cgal default parameters so that smaller 
+    meshes will have a good skeletonization and segmentaiton
+    
+    
     tu.skeleton_and_mesh_segmentation(
         filepath = "./elephant.off",
         plot_segmentation = True,
@@ -7120,6 +7135,7 @@ restrict_meshes_from_stats = query_meshes_from_restrictions
 #--- from mesh_tools ---
 from . import compartment_utils as cu
 from . import skeleton_utils as sk
+from . import correspondence_utils as coru
 
 #--- from machine_learning_tools ---
 try:

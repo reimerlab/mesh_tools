@@ -164,3 +164,8 @@ __pycache__/
 docs/_build/
 docs/_static/
 docs/_templates
+
+
+# example mesh files
+!*elephant.off
+!*neuron_branch.off
