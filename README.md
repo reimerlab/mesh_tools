@@ -42,3 +42,11 @@ cd /
 git clone https://github.com/reimerlab/mesh_tools
 pip3 install -e /mesh_tools
 ```
+
+### run integration test to verify environment setup (requires git clone method)
+
+```bash
+cd /mesh_tools
+# run the integration tests
+python3 -m unittest discover -s tests
+```
