@@ -8,7 +8,8 @@ h5py>=3.1.0
 ipyvolume>=0.5.2
 matplotlib>=3.3.4
 networkx>=2.5
-open3d==0.11.2 
+open3d
+#open3d==0.11.2 
 #open3d==0.13.0
 pymeshfix>=0.13.4
 datasci-stdlib-tools>=1.0.1

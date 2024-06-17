@@ -24,6 +24,7 @@ import time
 import trimesh
 from trimesh.path.exchange.misc import faces_to_path
 from trimesh import triangles
+import itertools
 
 try:
     import cgal_Segmentation_Module as csm
@@ -7122,6 +7123,78 @@ def query_meshes_from_restrictions(
     else:
         return return_meshes
     
+
+
+def bbox_mesh(
+    arr = None,
+    bbox_corners=None,
+    bbox_coords=None,
+    verbose = False,
+    debug = False,
+    plot = False,
+    ):
+    """
+    compute the faces of the bouding box mesh: it is the size 3 sliding window across a path (for all paths)
+    - but there is some redundancy paths then
+
+    How to efficiently determine all paths? 
+    1) node can only move from point with one element greater
+    - could get edge matrix easily
+    """
+
+    if bbox_coords is None:
+        if bbox_corners is None:
+            bbox_corners = nu.bounding_box_corners(arr)
+        bbox_coords = nu.bounding_box_vertices(bbox_corners,plot=False)
+
+
+    A = np.array([(np.sum(bbox_coords - k > 0 ,axis = 1) == 1) & (~np.any(bbox_coords - k < 0,axis = 1))
+               for k in bbox_coords])
+    AT = A.T
+
+    G = dict([(i,np.where(A[i,:])[0].astype('int')) for i in range(len(A))])
+    GT = dict([(i,np.where(AT[i,:])[0].astype('int')) for i in range(len(AT))])
+
+
+    faces = []
+
+    for u in G:
+        upstream = GT[u]
+        downstream = G[u]
+        if len(upstream) == 0 or len(downstream) == 0:
+            continue
+
+        combs = itertools.product(upstream,downstream)
+        paths = [[k[0],u,k[1]] for k in combs]
+
+        if debug:
+            print(f"Working on node {u}:")
+            print(f"   upstream = {upstream}, downstream = {downstream}")
+            path_str = '\n'.join([str(k) for k in paths])
+            print(f"   All paths: {path_str}")
+
+        faces += paths
+
+
+    if verbose:
+        print(f"# of faces = {len(faces)}")
+        
+    bbox_mesh = trimesh.Trimesh(
+        vertices = bbox_coords,
+        faces = np.array(faces),
+    )
+
+    if plot:
+        ipvu.plot_objects(
+            bbox_mesh,
+            scatters=[bbox_coords],
+            scatter_size=1,
+            buffer = 1,
+            axis_box_off=False
+        )
+        
+    return bbox_mesh
+    
     
 from datasci_tools import mesh_utils as meshu
 clear_mesh_cache = meshu.clear_mesh_cache
@@ -7152,5 +7225,9 @@ from datasci_tools import numpy_utils as nu
 from datasci_tools import pandas_utils as pu
 from datasci_tools import system_utils as su
 from datasci_tools.tqdm_utils import tqdm
+
+
+
+
 
 from . import trimesh_utils as tu
