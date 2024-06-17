@@ -242,6 +242,7 @@
 <li class="toctree-l4"><a class="reference internal" href="#mesh_tools.trimesh_utils.bbox_max_x"><code class="docutils literal notranslate"><span class="pre">bbox_max_x()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mesh_tools.trimesh_utils.bbox_max_y"><code class="docutils literal notranslate"><span class="pre">bbox_max_y()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mesh_tools.trimesh_utils.bbox_max_z"><code class="docutils literal notranslate"><span class="pre">bbox_max_z()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#mesh_tools.trimesh_utils.bbox_mesh"><code class="docutils literal notranslate"><span class="pre">bbox_mesh()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mesh_tools.trimesh_utils.bbox_mesh_restriction"><code class="docutils literal notranslate"><span class="pre">bbox_mesh_restriction()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mesh_tools.trimesh_utils.bbox_min_x"><code class="docutils literal notranslate"><span class="pre">bbox_min_x()</span></code></a></li>
 <li class="toctree-l4"><a class="reference internal" href="#mesh_tools.trimesh_utils.bbox_min_y"><code class="docutils literal notranslate"><span class="pre">bbox_min_y()</span></code></a></li>
@@ -2956,6 +2957,16 @@ verbose = True,
 <dt class="sig sig-object py" id="mesh_tools.trimesh_utils.bbox_max_z">
 <span class="sig-prename descclassname"><span class="pre">mesh_tools.trimesh_utils.</span></span><span class="sig-name descname"><span class="pre">bbox_max_z</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mesh_tools/trimesh_utils.html#bbox_max_z"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mesh_tools.trimesh_utils.bbox_max_z" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="mesh_tools.trimesh_utils.bbox_mesh">
+<span class="sig-prename descclassname"><span class="pre">mesh_tools.trimesh_utils.</span></span><span class="sig-name descname"><span class="pre">bbox_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox_corners</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bbox_coords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">debug</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mesh_tools/trimesh_utils.html#bbox_mesh"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#mesh_tools.trimesh_utils.bbox_mesh" title="Permalink to this definition"></a></dt>
+<dd><p>compute the faces of the bouding box mesh: it is the size 3 sliding window across a path (for all paths)
+- but there is some redundancy paths then</p>
+<p>How to efficiently determine all paths?
+1) node can only move from point with one element greater
+- could get edge matrix easily</p>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="mesh_tools.trimesh_utils.bbox_mesh_restriction">
