@@ -16,6 +16,7 @@ datasci-stdlib-tools>=1.0.1
 machine_learning_tools>=1.0.0
 scipy>=1.5.4
 tqdm>=4.62.2
-trimesh>=3.9.0
+#trimesh>=3.9.0
+trimesh==3.22.3
 ipython
 ipython_genutils
