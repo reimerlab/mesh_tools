@@ -1059,7 +1059,8 @@ def restrict_mesh(original_mesh,restrict_meshes,
                                    return_mesh=return_mesh
                                   )
 
-def original_mesh_faces_map(original_mesh, submesh,
+def original_mesh_faces_map(original_mesh, 
+                            submesh,
                            matching=True,
                            print_flag=False,
                            match_threshold = 0.001,
@@ -1437,17 +1438,19 @@ def convert_meshes_to_face_idxes(mesh_list,
     return periphery_pieces_faces
     
             
-def mesh_list_connectivity(meshes,
-                        main_mesh,
-                           connectivity="edges",
-                           pairs_to_test=None,
-                           min_common_vertices=1,
-                           weighted_edges=False,
-                           return_vertex_connection_groups=False,
-                           return_largest_vertex_connection_group=False,
-                           return_connected_components=False,
-                        print_flag = False,
-                          verbose = False):
+def mesh_list_connectivity(
+    meshes,
+    main_mesh,
+    connectivity="edges",
+    pairs_to_test=None,
+    min_common_vertices=1,
+    weighted_edges=False,
+    return_vertex_connection_groups=False,
+    return_largest_vertex_connection_group=False,
+    return_connected_components=False,
+    print_flag = False,
+    verbose = False
+    ):
     """
     Pseudocode:
     1) Build an edge list
@@ -7194,6 +7197,46 @@ def bbox_mesh(
         )
         
     return bbox_mesh
+
+def boundary_edges(mesh):
+    # Get all edges and how many faces use each edge
+    edges_unique, counts = np.unique(mesh.edges_sorted, axis=0, return_counts=True)
+
+    # Boundary edges appear only once
+    boundary_edges = edges_unique[counts == 1]
+    return boundary_edges
+
+def edges_lengths(mesh,edges):
+    v0 = mesh.vertices[edges[:,0]]
+    v1 = mesh.vertices[edges[:,1]]
+    return np.linalg.norm(v0 - v1,axis=1)
+
+def boundary_edges_lengths(mesh):
+    b_edges = boundary_edges(mesh)
+    return edges_lengths(mesh,b_edges)
+
+def boundary_edges_lengths_sum(mesh):
+    return np.sum(boundary_edges_lengths(mesh))
+
+def face_area(mesh):
+    return mesh.area_faces
+
+def face_area_mean(mesh):
+    return np.mean(mesh.area_faces)
+
+def face_area_sum(mesh):
+    return np.sum(mesh.area_faces)
+
+def face_area_max(mesh):
+    return np.max(mesh.area_faces)
+
+def area_to_boundary_length_ratio(mesh,default_value=0):
+    boundary_length = boundary_edges_lengths_sum(mesh)
+        
+    if boundary_length > 0:
+        return face_area_sum(mesh)/boundary_length
+    else:
+        return default_value 
     
     
 from datasci_tools import mesh_utils as meshu
