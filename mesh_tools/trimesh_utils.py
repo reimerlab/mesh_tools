@@ -5796,7 +5796,8 @@ def mesh_list_distance_connectivity(
     pairs_to_test=None,
     max_distance = np.inf,
     return_G = False,
-    verbose = False
+    verbose = False,
+    attribute_name = "triangles_center",
     ):
     """
     Purpose: To find the distances
@@ -5818,6 +5819,7 @@ def mesh_list_distance_connectivity(
         dist = tu.closest_distance_between_meshes(
             meshes[i],
             meshes[j],
+            attribute_name = attribute_name
             )
         if verbose:
             print(f"Mesh {i},{j} dist = {dist}")
