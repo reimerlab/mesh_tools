@@ -8004,6 +8004,389 @@ def setdiff_skeleton(
         keep_skeleton_within_threshold=False,
         **kwargs
     )
+    
+# -- 5/2 addition: smoothing skeleton
+def plot_new_vs_old_sk(old_sk,new_sk,old_sk_color = "red",new_sk_color = "blue"):
+    colors = [old_sk_color,new_sk_color]
+    ipvu.plot_objects(
+        skeletons=[old_sk,new_sk],
+        skeletons_colors=colors,
+    )
+def skeleton_from_coordinate_path(coordinates):
+    return np.stack([coordinates[:-1],   # all but the last point
+                  coordinates[1: ]],  # all but the first point
+                 axis=1)     # stack into pairs along a new “edge” axis
+
+class SkeletonTransformer:
+    def __init__(self, path_transform):
+        self.path_transform = path_transform
+
+    def __call__(self, skeleton, plot = False,n_pts=None, **kwargs):
+        # 1) extract raw coords
+        pts = sk.skeleton_coordinate_path_from_start(
+            skeleton, start_endpoint_coordinate=skeleton[0][0]
+        )
+
+        # 2) do whatever smoothing/resampling you like
+        smoothed = self.path_transform(pts, **kwargs)
+
+        # 3) now apply the fixed-end + reparam logic ONCE for _all_ transforms
+        return_sk = self._fix_and_resample(smoothed, pts, n_pts)
+
+        if plot:
+            plot_new_vs_old_sk(
+                skeleton,
+                return_sk
+            )
+        return return_sk
+
+    def _fix_and_resample(self, sm, orig_pts, n_pts):
+        m = orig_pts.shape[0]
+        if n_pts is None:
+            n_pts = m
+
+        # lock the original endpoints
+        sm[0]   = orig_pts[0]
+        sm[-1]  = orig_pts[-1]
+
+        # cumulative distances
+        seg_d = np.linalg.norm(np.diff(sm, axis=0), axis=1)
+        cum   = np.r_[0, np.cumsum(seg_d)]
+        u     = cum / cum[-1]
+
+        # interpolate to uniform spacing
+        u_f   = np.linspace(0, 1, n_pts)
+        out   = np.vstack([np.interp(u_f, u, sm[:,i]) for i in range(3)]).T
+
+        # re-lock just in case of float drift
+        out[0]  = orig_pts[0]
+        out[-1] = orig_pts[-1]
+        return skeleton_from_coordinate_path(out)
+
+import numpy as np
+from scipy.ndimage import gaussian_filter1d
+def gaussian_smooth(pts, sigma=25, n_pts=None):
+    """
+    Gaussian-smooths a (m×3) point sequence, then re-samples to n_pts
+    evenly-spaced points, but keeps endpoints exactly as in pts.
+
+    Parameters
+    ----------
+    pts : ndarray, shape (m,3)
+        Original path points.
+    sigma : float
+        Gaussian kernel standard deviation (in point-units).
+    n_pts : int or None
+        Number of output points. If None, defaults to m (same as input).
+
+    Returns
+    -------
+    smooth_pts : ndarray, shape (n_pts,3)
+        Smoothed & re-sampled path with smooth_pts[0] == pts[0]
+        and smooth_pts[-1] == pts[-1].
+    """
+    m = pts.shape[0]
+    if n_pts is None:
+        n_pts = m
+
+    # 1) Smooth each axis
+    sm = np.stack([
+        gaussian_filter1d(pts[:,i], sigma=sigma, mode='nearest')
+        for i in range(3)
+    ], axis=1)
+
+    return sm
+
+def gaussian_smooth_partial(pts, indices_to_transform, sigma=25):
+    """
+    Apply a 1D Gaussian filter to only a subset of the points in a (m×3) path.
+
+    Parameters
+    ----------
+    pts : ndarray, shape (m,3)
+        Original path points.
+    indices_to_transform : sequence of ints
+        Which rows of pts should be smoothed.
+    sigma : float
+        Gaussian kernel standard deviation (in point-units).
+
+    Returns
+    -------
+    sm : ndarray, shape (m,3)
+        Same as pts except at the given indices, where
+        sm[i] == the Gaussian-filtered value.
+    """
+    # ensure np array of indices
+    idx = np.asarray(indices_to_transform, dtype=int)
+
+    # 1) compute the full smoothed path
+    full_sm = np.stack([
+        gaussian_filter1d(pts[:, i], sigma=sigma, mode='nearest')
+        for i in range(3)
+    ], axis=1)
+
+    # 2) splice only the requested rows back into a copy of the original
+    sm = pts.copy()
+    sm[idx] = full_sm[idx]
+
+    return sm
+
+
+from scipy.interpolate import splprep, splev
+import numpy as np
+
+def b_spline(pts,k=2,n_samples=300,plot = False,):
+    from scipy.interpolate import splprep, splev
+    import numpy as np
+    
+    # pts: (M,3) ordered path
+    # compute cumulative arc-length parameter u
+    d = np.r_[0, np.cumsum(np.linalg.norm(np.diff(pts,axis=0),axis=1))]
+    u = d/d[-1]
+    
+    # fit a quadratic spline with lots of smoothing
+    spline_s = len(pts)*10    # try 10×M or even 100×M if needed
+    tck, _ = splprep(pts.T, u=u, s=spline_s, k=k)
+    
+    # re-sample smoothly
+    u_f = np.linspace(0,1,n_samples)
+    x_f,y_f,z_f = splev(u_f, tck)
+    smoothed_spline = np.vstack([x_f,y_f,z_f]).T
+    return smoothed_spline
+
+
+def laplacian_smooth(pts, alpha=0.2, iters=50):
+    sm = pts.copy()
+    for _ in range(iters):
+        sm[1:-1] += alpha*((sm[:-2] + sm[2:])/2 - sm[1:-1])
+    return sm
+
+import numpy as np
+from scipy.ndimage import gaussian_filter1d
+
+import types
+def smooth_skeleton_transform(
+    skeleton,
+    transform="gaussian",
+    plot = False,
+    verbose = False,
+    **kwargs):
+    
+    if isinstance("hello",str):
+        try:
+            transform = getattr(sk,transform)
+        except:
+            if "gaussian_smooth_partial" == transform:
+                transform = gaussian_smooth_partial
+            elif "gaussian" in transform:
+                transform = gaussian_smooth
+            elif "spline" in transform:
+                transform = b_spline
+            elif "laplac" in transform:
+                transform = laplacian_smooth  
+            else:
+                raise ValueError("transform {transform} was not a string that specified a valid function skeleton smoothing function")
+    if not isinstance(transform, types.FunctionType):
+        raise ValueError("transform {transform} was not a valid")
+    if verbose:
+        print(f"Using skeleton transform: {transform.__name__}")
+        
+    transObj = SkeletonTransformer(transform)
+    
+    return transObj(skeleton,plot=plot,**kwargs)
+
+
+    
+import numpy as np
+def points_from_skeleton(skeleton):
+    return np.vstack([skeleton[:, 0], skeleton[-1, 1][None, :]])
+def ordered_points(skeleton,start_coordinate):
+    ord_sk = sk.order_skeleton(skeleton,start_endpoint_coordinate=start_coordinate)
+    return points_from_skeleton(skeleton)
+def find_sharp_bend(
+    skeleton = None,
+    points = None,
+    window_size: int = 5,
+    min_segment_length: float = 1e-3,
+    severity_threshold: float = 0.0,
+    debug = False,
+    verbose = False,
+    indices_to_ignore=None,
+    ) -> dict:
+    """
+    Identify the sharpest bend in a non-branching skeleton.
+
+    Parameters
+    ----------
+    skeleton_edges : (N, 2, 3) array
+        Each row holds the two endpoints of one segment.
+    window_size : int
+        Number of segments to look back/ahead when estimating direction.
+    min_segment_length : float
+        Minimum length for the directional vectors to be considered valid.
+    severity_threshold : float
+        Minimum severity (in radians) to report a bend.
+
+    Returns
+    -------
+    dict or None
+        If a bend above the threshold is found, returns a dict with:
+        - 'index': int, vertex index of the bend
+        - 'point': (3,) array, coordinates of the bend
+        - 'angle': float, angle between directions at that point (rad)
+        - 'severity': float, π - angle (rad)
+        - 'angles': (M,) array of all computed angles
+        - 'severities': (M,) array of all computed severities
+        Otherwise, returns None.
+    """
+    
+    if indices_to_ignore is None:
+        indices_to_ignore = []
+    # Build ordered list of vertices
+    if points is None:
+        points = points_from_skeleton(skeleton)
+        
+    M = points.shape[0]
+
+    angles = np.full(M, np.nan)
+    severities = np.full(M, np.nan)
+
+    # Compute angles/severities
+    for i in range(window_size, M - window_size):
+        if i in indices_to_ignore:
+            continue
+        p_prev = points[i - window_size]
+        p_curr = points[i]
+        p_next = points[i + window_size]
+
+        v1 = p_curr - p_prev
+        v2 = p_next - p_curr
+        n1 = np.linalg.norm(v1)
+        n2 = np.linalg.norm(v2)
+
+        if debug:
+            print(f"-- working on {i} -- ")
+            print(f"\tn1 = {n1:.2f}, n2 = {n2:.2f} (min_segment_length = {min_segment_length})")
+        
+        if n1 < min_segment_length or n2 < min_segment_length:
+            continue
+
+        cosang = np.dot(v1, v2) / (n1 * n2)
+        cosang = np.clip(cosang, -1.0, 1.0)
+        ang = np.arccos(cosang)
+
+        if debug:
+            print(f"\tang = {ang}")
+
+        angles[i] = ang
+        severities[i] = np.pi - ang
+
+    # Find the sharpest bend
+    if np.all(np.isnan(severities)):
+        return None
+
+    idx = int(np.nanargmax(angles))
+    max_sev = severities[idx]
+    if max_sev < severity_threshold:
+        return None
+
+    # if return_default:
+    #     return {
+    #         'index': None,
+    #         'point': None,
+    #         'angle': 0,
+    #         'severity': None,
+    #         'angles': None,
+    #         'severities': None
+    #     }
+ 
+
+    return {
+        'index': idx,
+        'point': points[idx],
+        'angle': angles[idx],
+        'severity': max_sev,
+        'angles': angles,
+        'severities': severities
+    }
+
+def bend_max_from_non_branching_skeleton(
+    skeleton=None,
+    points = None,
+    order_skeleton = True,
+    window_size = 20,
+    default_value = 0,
+    verbose = False,
+    plot = False, 
+    radians = False,
+    indices_to_ignore = None,
+    ):
+    """
+    To compute the largest angle inflection along a smoothed non-branching
+    skeleton for a given window size and branch
+    
+    Pseudocode
+    ----------
+    Get the smoothed skeleton
+    
+    Returns:
+        
+    """
+    if indices_to_ignore is None:
+        indices_to_ignore = []
+    # 1) Create the ordered skeleton to compute on
+    if points is None:
+        if order_skeleton:
+            ordered_sk = sk.order_skeleton(skeleton)
+        else:
+            ordered_sk = skeleton
+        points = points_from_skeleton(ordered_sk)
+    
+    angle_max = default_value
+    largest_index = None
+    index_perc = -1
+    coordinate = None
+    if len(points) < 2*window_size + 1:
+        if verbose:
+            print(f"Number of points not large enough to find inflextion point")
+    else:
+        bend = find_sharp_bend(
+            points = points,
+            debug = False,
+            window_size = window_size,
+            indices_to_ignore=indices_to_ignore,
+        )
+        if bend is not None:
+            coordinate = bend['point']
+            largest_index = bend['index']
+            index_perc = bend['index']/len(points)
+            angle_max = bend['angle']
+        
+        if not radians:
+            angle_max = angle_max*180/np.pi
+        
+        if verbose:
+            print(f"inflexion point at skeleton index {largest_index} (index_perc = {index_perc:.2f})")
+            print(f"angle_max = {angle_max:.2f} at coordinate = {coordinate}")
+    if plot:
+        if bend is None:
+            print(f"Requested plotting but no bend point found")
+        else:
+            skeleton = np.vstack([points[:-1],points[1:]]).T
+            ipvu.plot_objects(
+                main_skeleton = skeleton,
+                scatters=[coordinate.reshape(-1,3)],
+                scatters_colors="red",
+                scatter_size=1.4,
+            )
+
+    return dict(
+        coordinate = coordinate,
+        largest_index = largest_index,
+        index_perc = index_perc,
+        angle_max = angle_max,
+    )
+
 
 
 #--- from mesh_tools ---
